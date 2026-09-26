@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Paleta GymApp (del diseño del usuario) */
+:root {
+  --lime: #B2EE37;
+  --white: #FCFCFC;
+  --ink: #0F1012;
+  --green: #55F670;
+  --gray: #7C7C74;
+  --surface: #17191d;
+  --surface2: #1f2227;
+}
+
+html, body, #root { height: 100%; }
+body { background: var(--ink); color: var(--white); overscroll-behavior-y: none; }
+
+/* Muñeco gris placeholder */
+@keyframes lift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes arms {
+  0%, 100% { transform: rotate(-14deg); }
+  50% { transform: rotate(16deg); }
+}
+.fig-lift { animation: lift 2.2s ease-in-out infinite; transform-origin: center; }
+.fig-arms { animation: arms 2.2s ease-in-out infinite; transform-origin: 100px 62px; }
+@media (prefers-reduced-motion: reduce) {
+  .fig-lift, .fig-arms { animation: none; }
+}
+
+/* Barra de progreso del descanso */
+@keyframes shrink-bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* Fondos difuminados estilo referencia (glows lima/verde sobre negro) */
+.glow {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
