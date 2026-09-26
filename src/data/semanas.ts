@@ -847,6 +847,7 @@ const S6_MARTES: Exercise[] = [
     id: 's6-mar-3', dia: 'Martes', orden: 3,
     nombre: 'Hiperextensión a 45° con peso',
     nombreEn: 'Weighted 45 Degree Hyperextension',
+    video: 'https://www.youtube.com/watch?v=lEeCPhlFZig',
     alternativas: 'Elevación glúteo-isquio (GHR) o Pull through en polea',
     alts: [
       { es: 'Elevación glúteo-isquio (GHR)', en: 'Glute-Ham Raise', video: 'https://www.youtube.com/watch?v=9ksG-O0ZUto' },
@@ -858,7 +859,7 @@ const S6_MARTES: Exercise[] = [
     workSets: 1, workReps: '8-10',
     tecnica: 'Aprieta fuerte los glúteos arriba en cada repetición. Baja lenta y controlada, luego sube explosivo.',
     tipoPeso: 'redondo', pattern: 'pierna',
-    demoUrl: 'https://www.youtube.com/results?search_query=weighted+45+degree+hyperextension+tecnica',
+    demoUrl: 'https://www.youtube.com/watch?v=lEeCPhlFZig',
     wgerId: null, mediaMp4: null, mediaKey: 'hyperextension-45',
   },
   W3(S1_MARTES[3], 's6-mar-4', { calentSets: '1 a 2', calentDetalle: C2, workSets: 1, workReps: '10-12', rpe: '~7', descanso: '1-2 min' }),
