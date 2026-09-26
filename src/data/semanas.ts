@@ -14,7 +14,7 @@ const S1_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=vqQ9ok0dEgk',
     alternativas: 'Press inclinado con mancuernas a 45° o Press inclinado en máquina a 45°',
     alts: [
-      { es: 'Press inclinado con mancuernas a 45°', en: '45° Dumbbell Incline Press', video: 'https://www.youtube.com/watch?v=p2t9daxLpB8' },
+      { es: 'Press inclinado con mancuernas a 45°', en: '45° Dumbbell Incline Press', video: 'https://www.youtube.com/watch?v=p2t9daxLpB8', mediaKey: 'incline-db-press' },
       { es: 'Press inclinado en máquina a 45°', en: '45° Incline Machine Press', video: 'https://www.youtube.com/watch?v=b8fYnZ-usP0' },
     ],
     descanso: '3-5 min',
@@ -33,8 +33,8 @@ const S1_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=0TP9kVcWGic',
     alternativas: 'Máquina contractora (pec deck) o Aperturas con mancuernas (mitad inferior)',
     alts: [
-      { es: 'Máquina contractora (pec deck)', en: 'Pec Deck', video: 'https://www.youtube.com/watch?v=CI88L1VNvEs' },
-      { es: 'Aperturas con mancuernas (mitad inferior)', en: 'Bottom Half DB Flye', video: 'https://www.youtube.com/watch?v=qJzc-iHKGdg' },
+      { es: 'Máquina contractora (pec deck)', en: 'Pec Deck', video: 'https://www.youtube.com/watch?v=CI88L1VNvEs', mediaKey: 'pec-deck' },
+      { es: 'Aperturas con mancuernas (mitad inferior)', en: 'Bottom Half DB Flye', video: 'https://www.youtube.com/watch?v=qJzc-iHKGdg', mediaKey: 'bottom-half-db-flye' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -53,7 +53,7 @@ const S1_LUNES: Exercise[] = [
     alternativas: 'Jalón al pecho con agarre ancho o Jalón con doble agarre (dorsal medio y laterales)',
     alts: [
       { es: 'Jalón al pecho con agarre ancho', en: 'Wide-Grip Lat Pulldown', video: 'https://www.youtube.com/watch?v=IYXRrYXfVLc' },
-      { es: 'Jalón con doble agarre (dorsal medio y laterales)', en: 'Dual-Handle Lat Pulldown', video: 'https://www.youtube.com/watch?v=NwQ5Ch5t5Vk' },
+      { es: 'Jalón con doble agarre (dorsal medio y laterales)', en: 'Dual-Handle Lat Pulldown', video: 'https://www.youtube.com/watch?v=NwQ5Ch5t5Vk', mediaKey: 'dual-handle-lat-pulldown' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -90,7 +90,7 @@ const S1_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=MmuyHKYCLps',
     alternativas: 'Remo en máquina Smith o Remo con mancuerna',
     alts: [
-      { es: 'Remo en máquina Smith', en: 'Smith Machine Row', video: 'https://www.youtube.com/watch?v=Wmivm40AV3Q' },
+      { es: 'Remo en máquina Smith', en: 'Smith Machine Row', video: 'https://www.youtube.com/watch?v=Wmivm40AV3Q', mediaKey: 'smith-machine-row' },
       { es: 'Remo con mancuerna', en: 'DB Row', video: 'https://www.youtube.com/watch?v=roKtfQZbxzg' },
     ],
     descanso: '2-3 min',
@@ -212,7 +212,7 @@ const S1_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=nQL5ieH39sw',
     alternativas: 'Press de pecho en máquina o Press de pecho con mancuernas',
     alts: [
-      { es: 'Press de pecho en máquina', en: 'Chest Press Machine', video: 'https://www.youtube.com/watch?v=zDecGJLyVm8' },
+      { es: 'Press de pecho en máquina', en: 'Chest Press Machine', video: 'https://www.youtube.com/watch?v=zDecGJLyVm8', mediaKey: 'machine-chest-press' },
       { es: 'Press de pecho con mancuernas', en: 'Dumbbell Chest Press', video: 'https://www.youtube.com/watch?v=zGXvPjlgVkk' },
     ],
     descanso: '3-5 min',
@@ -232,7 +232,7 @@ const S1_VIERNES: Exercise[] = [
     alternativas: 'Press de hombros en polea o Press de hombros sentado con mancuernas',
     alts: [
       { es: 'Press de hombros en polea', en: 'Cable Shoulder Press', video: 'https://www.youtube.com/watch?v=OfjncdW_Vyc' },
-      { es: 'Press de hombros sentado con mancuernas', en: 'Seated DB Shoulder Press', video: 'https://www.youtube.com/watch?v=B8PB5RPhTWQ' },
+      { es: 'Press de hombros sentado con mancuernas', en: 'Seated DB Shoulder Press', video: 'https://www.youtube.com/watch?v=B8PB5RPhTWQ', mediaKey: 'seated-db-shoulder-press' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -250,7 +250,7 @@ const S1_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=qJzc-iHKGdg',
     alternativas: 'Aperturas en polea sentado (mitad inferior) o Cruce de poleas de abajo hacia arriba',
     alts: [
-      { es: 'Aperturas en polea sentado (mitad inferior)', en: 'Bottom Half Seated Cable Flye', video: 'https://www.youtube.com/watch?v=tsJMV9Gxw-o' },
+      { es: 'Aperturas en polea sentado (mitad inferior)', en: 'Bottom Half Seated Cable Flye', video: 'https://www.youtube.com/watch?v=tsJMV9Gxw-o', mediaKey: 'bottom-half-seated-cable-flye' },
       { es: 'Cruce de poleas de abajo hacia arriba', en: 'Low-to-High Cable Crossover', video: 'https://www.youtube.com/watch?v=1LhGmhVFe2Y', mediaKey: 'low-to-high-cable-crossover' },
     ],
     descanso: '1-2 min',
@@ -349,7 +349,7 @@ const S1_JUEVES: Exercise[] = [
     alternativas: 'Zancada en máquina Smith o Zancadas caminando con mancuernas',
     alts: [
       { es: 'Zancada en máquina Smith', en: 'Smith Machine Lunge', video: 'https://www.youtube.com/watch?v=SEjKxJGg_C8' },
-      { es: 'Zancadas caminando con mancuernas', en: 'DB Walking Lunge', video: 'https://www.youtube.com/watch?v=BC_eDtrB-M4' },
+      { es: 'Zancadas caminando con mancuernas', en: 'DB Walking Lunge', video: 'https://www.youtube.com/watch?v=BC_eDtrB-M4', mediaKey: 'db-walking-lunge' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -367,7 +367,7 @@ const S1_JUEVES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=yv0aAY7M1mk',
     alternativas: 'Curl de piernas tumbado o Curl nórdico de isquios',
     alts: [
-      { es: 'Curl de piernas tumbado', en: 'Lying Leg Curl', video: 'https://www.youtube.com/watch?v=sX4tGtcc62k' },
+      { es: 'Curl de piernas tumbado', en: 'Lying Leg Curl', video: 'https://www.youtube.com/watch?v=sX4tGtcc62k', mediaKey: 'lying-leg-curl' },
       { es: 'Curl nórdico de isquios', en: 'Nordic Ham Curl', video: 'https://www.youtube.com/watch?v=fzpYiRtzmFA', mediaKey: 'nordic-ham-curl' },
     ],
     descanso: '1-2 min',
@@ -425,7 +425,7 @@ const S1_JUEVES: Exercise[] = [
     alternativas: 'Elevación de pantorrillas sentado o Pantorrillas en prensa',
     alts: [
       { es: 'Elevación de pantorrillas sentado', en: 'Seated Calf Raise', video: 'https://www.youtube.com/watch?v=6pfj0G7VKdM', mediaKey: 'seated-calf-raise' },
-      { es: 'Pantorrillas en prensa', en: 'Leg Press Calf Press', video: 'https://www.youtube.com/watch?v=S6DTPNZ_-F4' },
+      { es: 'Pantorrillas en prensa', en: 'Leg Press Calf Press', video: 'https://www.youtube.com/watch?v=S6DTPNZ_-F4', mediaKey: 'leg-press-calf-press' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -447,7 +447,7 @@ const S1_MIERCOLES: Exercise[] = [
     alternativas: 'Dominadas con agarre neutro o Jalón con doble agarre (dorsal medio y laterales)',
     alts: [
       { es: 'Dominadas con agarre neutro', en: 'Neutral-Grip Pull-Up', video: 'https://www.youtube.com/watch?v=b0ypSz63UGo' },
-      { es: 'Jalón con doble agarre (dorsal medio y laterales)', en: 'Dual-Handle Lat Pulldown', video: 'https://www.youtube.com/watch?v=NwQ5Ch5t5Vk' },
+      { es: 'Jalón con doble agarre (dorsal medio y laterales)', en: 'Dual-Handle Lat Pulldown', video: 'https://www.youtube.com/watch?v=NwQ5Ch5t5Vk', mediaKey: 'dual-handle-lat-pulldown' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -465,7 +465,7 @@ const S1_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=ijsSiWSzYw0',
     alternativas: 'Remo en barra T con apoyo al pecho o Remo con mancuernas en banco inclinado con apoyo',
     alts: [
-      { es: 'Remo en barra T con apoyo al pecho', en: 'Chest-Supported T-Bar Row', video: 'https://www.youtube.com/watch?v=q8qlHwcuOtc' },
+      { es: 'Remo en barra T con apoyo al pecho', en: 'Chest-Supported T-Bar Row', video: 'https://www.youtube.com/watch?v=q8qlHwcuOtc', mediaKey: 'chest-supported-tbar-row' },
       { es: 'Remo con mancuernas en banco inclinado con apoyo al pecho', en: 'Chest-Supported Incline DB Row', video: 'https://www.youtube.com/watch?v=okCWuhxJEvw' },
     ],
     descanso: '2-3 min',
@@ -503,7 +503,7 @@ const S1_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=ua0XuKwKQ9M',
     alternativas: 'Encogimiento en polea con pausa o Encogimientos con mancuernas',
     alts: [
-      { es: 'Encogimiento en polea con pausa', en: 'Cable Paused Shrug-In', video: 'https://www.youtube.com/watch?v=Hy6f1Lz_PiA' },
+      { es: 'Encogimiento en polea con pausa', en: 'Cable Paused Shrug-In', video: 'https://www.youtube.com/watch?v=Hy6f1Lz_PiA', mediaKey: 'cable-paused-shrug-in' },
       { es: 'Encogimientos con mancuernas', en: 'DB Shrug', video: 'https://www.youtube.com/watch?v=moFqLlptX7Q', mediaKey: 'db-shrug' },
     ],
     descanso: '1-2 min',
@@ -563,7 +563,7 @@ const S1_MARTES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=sX4tGtcc62k',
     alternativas: 'Curl femoral sentado o Curl nórdico de isquios',
     alts: [
-      { es: 'Curl femoral sentado', en: 'Seated Leg Curl', video: 'https://www.youtube.com/watch?v=yv0aAY7M1mk' },
+      { es: 'Curl femoral sentado', en: 'Seated Leg Curl', video: 'https://www.youtube.com/watch?v=yv0aAY7M1mk', mediaKey: 'seated-leg-curl' },
       { es: 'Curl nórdico de isquios', en: 'Nordic Ham Curl', video: 'https://www.youtube.com/watch?v=fzpYiRtzmFA', mediaKey: 'nordic-ham-curl' },
     ],
     descanso: '1-2 min',
@@ -640,7 +640,7 @@ const S1_MARTES: Exercise[] = [
     alternativas: 'Elevación de pantorrillas sentado o Pantorrillas en prensa',
     alts: [
       { es: 'Elevación de pantorrillas sentado', en: 'Seated Calf Raise', video: 'https://www.youtube.com/watch?v=6pfj0G7VKdM', mediaKey: 'seated-calf-raise' },
-      { es: 'Pantorrillas en prensa', en: 'Leg Press Calf Press', video: 'https://www.youtube.com/watch?v=S6DTPNZ_-F4' },
+      { es: 'Pantorrillas en prensa', en: 'Leg Press Calf Press', video: 'https://www.youtube.com/watch?v=S6DTPNZ_-F4', mediaKey: 'leg-press-calf-press' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -659,7 +659,7 @@ const S1_MARTES: Exercise[] = [
     alternativas: 'Crunch declinado con peso o Crunch en máquina',
     alts: [
       { es: 'Crunch declinado con peso', en: 'Weighted Decline Crunch', video: 'https://www.youtube.com/watch?v=ZheUsKqU81M' },
-      { es: 'Crunch en máquina', en: 'Machine Crunch', video: 'https://www.youtube.com/watch?v=K2yKEoazT3g' },
+      { es: 'Crunch en máquina', en: 'Machine Crunch', video: 'https://www.youtube.com/watch?v=K2yKEoazT3g', mediaKey: 'machine-crunch' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -748,7 +748,7 @@ const S6_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=p2t9daxLpB8',
     alternativas: 'Press inclinado con barra a 45° o Press inclinado en máquina a 45°',
     alts: [
-      { es: 'Press inclinado con barra a 45°', en: '45° Incline Barbell Press', video: 'https://www.youtube.com/watch?v=vqQ9ok0dEgk' },
+      { es: 'Press inclinado con barra a 45°', en: '45° Incline Barbell Press', video: 'https://www.youtube.com/watch?v=vqQ9ok0dEgk', mediaKey: 'incline-barbell-press' },
       { es: 'Press inclinado en máquina a 45°', en: '45° Incline Machine Press', video: 'https://www.youtube.com/watch?v=b8fYnZ-usP0' },
     ],
     descanso: '3-5 min',
@@ -767,8 +767,8 @@ const S6_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=CI88L1VNvEs',
     alternativas: 'Cruce de poleas en escalera o Aperturas con mancuernas (mitad inferior)',
     alts: [
-      { es: 'Cruce de poleas en escalera', en: 'Cable Crossover Ladder', video: 'https://www.youtube.com/watch?v=0TP9kVcWGic' },
-      { es: 'Aperturas con mancuernas (mitad inferior)', en: 'Bottom-Half DB Flye', video: 'https://www.youtube.com/watch?v=qJzc-iHKGdg' },
+      { es: 'Cruce de poleas en escalera', en: 'Cable Crossover Ladder', video: 'https://www.youtube.com/watch?v=0TP9kVcWGic', mediaKey: 'cable-crossover-ladder' },
+      { es: 'Aperturas con mancuernas (mitad inferior)', en: 'Bottom-Half DB Flye', video: 'https://www.youtube.com/watch?v=qJzc-iHKGdg', mediaKey: 'bottom-half-db-flye' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -787,7 +787,7 @@ const S6_LUNES: Exercise[] = [
     alternativas: 'Jalón al pecho con agarre ancho o Dominadas con agarre ancho',
     alts: [
       { es: 'Jalón al pecho con agarre ancho', en: 'Wide-Grip Lat Pulldown', video: 'https://www.youtube.com/watch?v=IYXRrYXfVLc' },
-      { es: 'Dominadas con agarre ancho', en: 'Wide-Grip Pull-Up', video: 'https://www.youtube.com/watch?v=yGnp0HU8BnA' },
+      { es: 'Dominadas con agarre ancho', en: 'Wide-Grip Pull-Up', video: 'https://www.youtube.com/watch?v=yGnp0HU8BnA', mediaKey: 'wide-grip-pullup' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -806,7 +806,7 @@ const S6_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=Wmivm40AV3Q',
     alternativas: 'Remo Pendlay con déficit o Remo con mancuerna a 1 brazo',
     alts: [
-      { es: 'Remo Pendlay con déficit', en: 'Pendlay Deficit Row', video: 'https://www.youtube.com/watch?v=MmuyHKYCLps' },
+      { es: 'Remo Pendlay con déficit', en: 'Pendlay Deficit Row', video: 'https://www.youtube.com/watch?v=MmuyHKYCLps', mediaKey: 'deficit-pendlay-row' },
       { es: 'Remo con mancuerna a 1 brazo', en: 'Single-Arm DB Row', video: 'https://www.youtube.com/watch?v=roKtfQZbxzg' },
     ],
     descanso: '2-3 min',
@@ -994,8 +994,8 @@ const S6_JUEVES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=TWUnnDK8rck',
     alternativas: 'Prensa de piernas o Zancadas caminando con mancuernas',
     alts: [
-      { es: 'Prensa de piernas', en: 'Leg Press', video: 'https://www.youtube.com/watch?v=1yKAQLVV_XI' },
-      { es: 'Zancadas caminando con mancuernas', en: 'DB Walking Lunge', video: 'https://www.youtube.com/watch?v=BC_eDtrB-M4' },
+      { es: 'Prensa de piernas', en: 'Leg Press', video: 'https://www.youtube.com/watch?v=1yKAQLVV_XI', mediaKey: 'leg-press' },
+      { es: 'Zancadas caminando con mancuernas', en: 'DB Walking Lunge', video: 'https://www.youtube.com/watch?v=BC_eDtrB-M4', mediaKey: 'db-walking-lunge' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
