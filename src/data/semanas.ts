@@ -109,7 +109,7 @@ const S1_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=9_I1PqZAjdA',
     alternativas: 'Extensión de tríceps en polea sobre la cabeza (cuerda) o Rompecráneos con mancuernas',
     alts: [
-      { es: 'Extensión de tríceps en polea sobre la cabeza (cuerda)', en: 'Overhead Cable Triceps Extension (Rope)', video: 'https://www.youtube.com/watch?v=GYoUoVNlbGc' },
+      { es: 'Extensión de tríceps en polea sobre la cabeza (cuerda)', en: 'Overhead Cable Triceps Extension (Rope)', video: 'https://www.youtube.com/watch?v=GYoUoVNlbGc', mediaKey: 'overhead-cable-triceps-extension-rope' },
       { es: 'Rompecráneos con mancuernas', en: 'DB Skull Crusher', video: 'https://www.youtube.com/watch?v=fbLTzgTKOR8' },
     ],
     descanso: '1-2 min',
@@ -251,7 +251,7 @@ const S1_VIERNES: Exercise[] = [
     alternativas: 'Aperturas en polea sentado (mitad inferior) o Cruce de poleas de abajo hacia arriba',
     alts: [
       { es: 'Aperturas en polea sentado (mitad inferior)', en: 'Bottom Half Seated Cable Flye', video: 'https://www.youtube.com/watch?v=tsJMV9Gxw-o' },
-      { es: 'Cruce de poleas de abajo hacia arriba', en: 'Low-to-High Cable Crossover', video: 'https://www.youtube.com/watch?v=1LhGmhVFe2Y' },
+      { es: 'Cruce de poleas de abajo hacia arriba', en: 'Low-to-High Cable Crossover', video: 'https://www.youtube.com/watch?v=1LhGmhVFe2Y', mediaKey: 'low-to-high-cable-crossover' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -288,7 +288,7 @@ const S1_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=9_I1PqZAjdA',
     alternativas: 'Extensión de tríceps en polea sobre la cabeza (cuerda) o Rompecráneos con mancuernas',
     alts: [
-      { es: 'Extensión de tríceps en polea sobre la cabeza (cuerda)', en: 'Overhead Cable Triceps Extension (Rope)', video: 'https://www.youtube.com/watch?v=GYoUoVNlbGc' },
+      { es: 'Extensión de tríceps en polea sobre la cabeza (cuerda)', en: 'Overhead Cable Triceps Extension (Rope)', video: 'https://www.youtube.com/watch?v=GYoUoVNlbGc', mediaKey: 'overhead-cable-triceps-extension-rope' },
       { es: 'Rompecráneos con mancuernas', en: 'DB Skull Crusher', video: 'https://www.youtube.com/watch?v=fbLTzgTKOR8' },
     ],
     descanso: '1-2 min',
@@ -368,7 +368,7 @@ const S1_JUEVES: Exercise[] = [
     alternativas: 'Curl de piernas tumbado o Curl nórdico de isquios',
     alts: [
       { es: 'Curl de piernas tumbado', en: 'Lying Leg Curl', video: 'https://www.youtube.com/watch?v=sX4tGtcc62k' },
-      { es: 'Curl nórdico de isquios', en: 'Nordic Ham Curl', video: 'https://www.youtube.com/watch?v=fzpYiRtzmFA' },
+      { es: 'Curl nórdico de isquios', en: 'Nordic Ham Curl', video: 'https://www.youtube.com/watch?v=fzpYiRtzmFA', mediaKey: 'nordic-ham-curl' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -424,7 +424,7 @@ const S1_JUEVES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=6lR2JdxUh7w',
     alternativas: 'Elevación de pantorrillas sentado o Pantorrillas en prensa',
     alts: [
-      { es: 'Elevación de pantorrillas sentado', en: 'Seated Calf Raise', video: 'https://www.youtube.com/watch?v=6pfj0G7VKdM' },
+      { es: 'Elevación de pantorrillas sentado', en: 'Seated Calf Raise', video: 'https://www.youtube.com/watch?v=6pfj0G7VKdM', mediaKey: 'seated-calf-raise' },
       { es: 'Pantorrillas en prensa', en: 'Leg Press Calf Press', video: 'https://www.youtube.com/watch?v=S6DTPNZ_-F4' },
     ],
     descanso: '1-2 min',
@@ -504,7 +504,7 @@ const S1_MIERCOLES: Exercise[] = [
     alternativas: 'Encogimiento en polea con pausa o Encogimientos con mancuernas',
     alts: [
       { es: 'Encogimiento en polea con pausa', en: 'Cable Paused Shrug-In', video: 'https://www.youtube.com/watch?v=Hy6f1Lz_PiA' },
-      { es: 'Encogimientos con mancuernas', en: 'DB Shrug', video: 'https://www.youtube.com/watch?v=moFqLlptX7Q' },
+      { es: 'Encogimientos con mancuernas', en: 'DB Shrug', video: 'https://www.youtube.com/watch?v=moFqLlptX7Q', mediaKey: 'db-shrug' },
     ],
     descanso: '1-2 min',
     rpe: '~6',
@@ -541,7 +541,7 @@ const S1_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=R2iUnBxFtis',
     alternativas: 'Curl predicador con barra EZ (barra Z, no recta) o Curl predicador con mancuernas',
     alts: [
-      { es: 'Curl predicador con barra EZ (barra Z/serpiente, NO recta)', en: 'EZ Bar Preacher Curl', video: 'https://www.youtube.com/watch?v=Dn7qgf9iSH8' },
+      { es: 'Curl predicador con barra EZ (barra Z/serpiente, NO recta)', en: 'EZ Bar Preacher Curl', video: 'https://www.youtube.com/watch?v=Dn7qgf9iSH8', mediaKey: 'ez-bar-preacher-curl' },
       { es: 'Curl predicador con mancuernas', en: 'DB Preacher Curl', video: 'https://www.youtube.com/watch?v=WTkQLAethtg' },
     ],
     descanso: '1-2 min',
@@ -564,7 +564,7 @@ const S1_MARTES: Exercise[] = [
     alternativas: 'Curl femoral sentado o Curl nórdico de isquios',
     alts: [
       { es: 'Curl femoral sentado', en: 'Seated Leg Curl', video: 'https://www.youtube.com/watch?v=yv0aAY7M1mk' },
-      { es: 'Curl nórdico de isquios', en: 'Nordic Ham Curl', video: 'https://www.youtube.com/watch?v=fzpYiRtzmFA' },
+      { es: 'Curl nórdico de isquios', en: 'Nordic Ham Curl', video: 'https://www.youtube.com/watch?v=fzpYiRtzmFA', mediaKey: 'nordic-ham-curl' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -582,8 +582,8 @@ const S1_MARTES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=J2D2J7RO_tA',
     alternativas: 'Sentadilla búlgara o Sentadilla trasera con barra alta',
     alts: [
-      { es: 'Sentadilla búlgara', en: 'Bulgarian Split Squat', video: 'https://www.youtube.com/watch?v=htDXu61MPio' },
-      { es: 'Sentadilla trasera con barra alta', en: 'High-Bar Back Squat', video: 'https://www.youtube.com/watch?v=V-B_Y-OvOTQ' },
+      { es: 'Sentadilla búlgara', en: 'Bulgarian Split Squat', video: 'https://www.youtube.com/watch?v=htDXu61MPio', mediaKey: 'bulgarian-split-squat' },
+      { es: 'Sentadilla trasera con barra alta', en: 'High-Bar Back Squat', video: 'https://www.youtube.com/watch?v=V-B_Y-OvOTQ', mediaKey: 'high-bar-back-squat' },
     ],
     descanso: '3-5 min',
     rpe: '~6',
@@ -601,7 +601,7 @@ const S1_MARTES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=ggFtGGYobE4',
     alternativas: 'Peso muerto rumano con mancuernas o Peso muerto rumano con agarre abierto (snatch)',
     alts: [
-      { es: 'Peso muerto rumano con mancuernas', en: 'DB RDL', video: 'https://www.youtube.com/watch?v=VRwSgUoj7uI' },
+      { es: 'Peso muerto rumano con mancuernas', en: 'DB RDL', video: 'https://www.youtube.com/watch?v=VRwSgUoj7uI', mediaKey: 'db-rdl' },
       { es: 'Peso muerto rumano con agarre abierto (snatch)', en: 'Snatch-Grip RDL', video: 'https://www.youtube.com/watch?v=b8fmEaXHapU' },
     ],
     descanso: '2-3 min',
@@ -639,7 +639,7 @@ const S1_MARTES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=6lR2JdxUh7w',
     alternativas: 'Elevación de pantorrillas sentado o Pantorrillas en prensa',
     alts: [
-      { es: 'Elevación de pantorrillas sentado', en: 'Seated Calf Raise', video: 'https://www.youtube.com/watch?v=6pfj0G7VKdM' },
+      { es: 'Elevación de pantorrillas sentado', en: 'Seated Calf Raise', video: 'https://www.youtube.com/watch?v=6pfj0G7VKdM', mediaKey: 'seated-calf-raise' },
       { es: 'Pantorrillas en prensa', en: 'Leg Press Calf Press', video: 'https://www.youtube.com/watch?v=S6DTPNZ_-F4' },
     ],
     descanso: '1-2 min',
@@ -831,8 +831,8 @@ const S6_MARTES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=GOqHdmshRKY',
     alternativas: 'Sentadilla búlgara o Sentadilla trasera con barra alta',
     alts: [
-      { es: 'Sentadilla búlgara', en: 'Bulgarian Split Squat', video: 'https://www.youtube.com/watch?v=htDXu61MPio' },
-      { es: 'Sentadilla trasera con barra alta', en: 'High-Bar Back Squat', video: 'https://www.youtube.com/watch?v=V-B_Y-OvOTQ' },
+      { es: 'Sentadilla búlgara', en: 'Bulgarian Split Squat', video: 'https://www.youtube.com/watch?v=htDXu61MPio', mediaKey: 'bulgarian-split-squat' },
+      { es: 'Sentadilla trasera con barra alta', en: 'High-Bar Back Squat', video: 'https://www.youtube.com/watch?v=V-B_Y-OvOTQ', mediaKey: 'high-bar-back-squat' },
     ],
     descanso: '3-5 min',
     rpe: '~6',

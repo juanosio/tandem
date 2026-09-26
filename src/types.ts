@@ -11,6 +11,7 @@ export interface Alt {
   es: string
   en?: string
   video?: string // YouTube del ejercicio alternativo
+  mediaKey?: string // GIF de la librería (se muestra en miniatura)
 }
 
 export interface Exercise {
