@@ -1124,7 +1124,7 @@ const S6_VIERNES: Exercise[] = [
 ]
 
 // Semana 7: mismas fichas de S6, 2-3 working sets, Early RPE con rangos y Last RPE hasta 10.
-interface S7Cfg { cs: string; cd: CalentSet[]; ws: number; reps: string; early: string; last: string; rest: string }
+interface S7Cfg { cs: string; cd: CalentSet[]; ws: number; reps: string; early: string; last: string; rest: string; fail?: boolean }
 const S7B = (base: Exercise[], p: string, cfg: S7Cfg[]): Exercise[] =>
   base.map((e, i) => ({
     ...e,
@@ -1132,50 +1132,51 @@ const S7B = (base: Exercise[], p: string, cfg: S7Cfg[]): Exercise[] =>
     calentSets: cfg[i].cs, calentDetalle: cfg[i].cd,
     workSets: cfg[i].ws, workReps: cfg[i].reps,
     earlyRpe: cfg[i].early, rpe: cfg[i].last, descanso: cfg[i].rest,
+    ...(cfg[i].fail ? { lastSetTech: 'Failure' } : {}),
   }));
 
 const S7_LUNES = S7B(S6_LUNES, 'lun', [
   { cs: '2 a 3', cd: C3, ws: 3, reps: '8-10', early: '~7-8', last: '~7-8', rest: '3-5 min' },
   { cs: '1 a 2', cd: C2, ws: 2, reps: '10-12', early: '~7-8', last: '~8-9', rest: '1-2 min' },
   { cs: '1 a 2', cd: C2, ws: 3, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
-  { cs: '1 a 2', cd: C2, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
   { cs: '1 a 2', cd: C2, ws: 2, reps: '8-10', early: '~7-8', last: '~7-8', rest: '2-3 min' },
-  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min' },
-  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
 ])
 
 const S7_MARTES = S7B(S6_MARTES, 'mar', [
   { cs: '2', cd: C2, ws: 2, reps: '10-12', early: '~7-8', last: '~8-9', rest: '1-2 min' },
   { cs: '2 a 4', cd: C4, ws: 3, reps: '8-10', early: '~7-8', last: '~7-8', rest: '3-5 min' },
   { cs: '2 a 4', cd: C4, ws: 3, reps: '8-10', early: '~7-8', last: '~7-8', rest: '2-3 min' },
-  { cs: '1 a 2', cd: C2, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min' },
-  { cs: '1 a 2', cd: C2, ws: 2, reps: '8-10', early: '~8-9', last: '10', rest: '1-2 min' },
-  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '8-10', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
 ])
 
 const S7_MIERCOLES = S7B(S6_MIERCOLES, 'mie', [
   { cs: '2 a 3', cd: C3, ws: 2, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
-  { cs: '2 a 3', cd: C3, ws: 3, reps: '10-12', early: '~8-9', last: '10', rest: '2-3 min' },
-  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '2 a 3', cd: C3, ws: 3, reps: '10-12', early: '~8-9', last: '10', rest: '2-3 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
   { cs: '2 a 3', cd: C3, ws: 2, reps: '12-15', early: '~7', last: '~8-9', rest: '1-2 min' },
   { cs: '1', cd: C1, ws: 3, reps: '12-15', early: '~7', last: '~8-9', rest: '1-2 min' },
-  { cs: '1', cd: C1, ws: 2, reps: '15-20', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '1', cd: C1, ws: 2, reps: '15-20', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
 ])
 
 const S7_JUEVES = S7B(S6_JUEVES, 'jue', [
   { cs: '2 a 4', cd: C4, ws: 3, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
-  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
   { cs: '2 a 3', cd: C3, ws: 2, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
-  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min' },
-  { cs: '1 a 2', cd: C2, ws: 3, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 3, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
 ])
 
 const S7_VIERNES = S7B(S6_VIERNES, 'vie', [
   { cs: '2 a 4', cd: C4, ws: 3, reps: '10-12', early: '~7-8', last: '~7-8', rest: '3-5 min' },
   { cs: '2 a 3', cd: C3, ws: 2, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
-  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min' },
-  { cs: '1', cd: C1, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1', cd: C1, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
   { cs: '1', cd: C1, ws: 3, reps: '12-15', early: '~7-8', last: '~8-9', rest: '1-2 min' },
-  { cs: '1', cd: C1, ws: 2, reps: '15-20', early: '~8-9', last: '10', rest: '1-2 min' },
-  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min' },
+  { cs: '1', cd: C1, ws: 2, reps: '15-20', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
 ])

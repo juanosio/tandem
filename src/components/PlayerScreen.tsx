@@ -108,6 +108,7 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
           <p>Del <b>1 al 10</b>, qué tan duras se sintieron las <b>últimas</b> repeticiones de tu serie. No es cuánto pesa, es cómo se sintió al final.</p>
           <p className="mt-1.5">Vale <b>solo para tu serie de trabajo</b> — el calentamiento siempre liviano, sin forzar.</p>
           {ex.earlyRpe && <p className="mt-1.5">Con 2 series: la <b>primera al RPE temprano ({ex.earlyRpe})</b> — fuerte pero guardando — y la <b>última al RPE final ({ex.rpe})</b>.</p>}
+          {ex.lastSetTech && <p className="mt-1.5">🔥 <b>AL FALLO en la última serie:</b> haz reps hasta no poder más con buena forma. Si la forma se rompe, ahí paras.</p>}
           <p className="mt-1.5">Ejemplo con <b>10 reps y RPE 7</b>: busca un peso con el que hagas las 10, las primeras ~7 salen bien y las <b>últimas 3 cuestan pero salen con buena forma</b>.</p>
           <p className="mt-1.5 text-[#7C7C74]">
             · Si las 10 salen fáciles → poco peso, súbelo la próxima.<br />
@@ -175,11 +176,13 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
           const d = done(k)
           const isLast = i === ex.workSets - 1
           const setRpe = ex.earlyRpe && !isLast ? ex.earlyRpe : ex.rpe
+          const toFailure = isLast && !!ex.lastSetTech
           return (
             <button key={k} onClick={() => check(k)}
               className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left ${d ? 'bg-[#55F670] text-black' : 'bg-[#FCFCFC] text-black'}`}>
               <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border-2 font-black ${d ? 'border-black bg-black text-[#55F670]' : 'border-black/20 text-transparent'}`}>✓</span>
               <span className="flex-1 text-base font-black">SET {i + 1} · {ex.workReps} reps {peso !== '' && peso > 0 ? `@ ${peso}kg` : ''}</span>
+              {toFailure && <span className="shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-black text-white">🔥 AL FALLO</span>}
               {setRpe && <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black ${d ? 'bg-black text-[#55F670]' : 'bg-black/10 text-black'}`}>RPE {setRpe}</span>}
             </button>
           )

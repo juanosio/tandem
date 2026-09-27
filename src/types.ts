@@ -27,6 +27,7 @@ export interface Exercise {
   descanso?: string // ej "3-5 min": mueve el timer de descanso
   rpe?: string // ej "~6": esfuerzo percibido del último set
   earlyRpe?: string // ej "~7": RPE de las series previas cuando hay 2+ (la última va al rpe)
+  lastSetTech?: string // ej "Failure": técnica de intensidad solo para el último set
   calentSets: string // "2 a 3" tal cual tu tabla
   calentDetalle: CalentSet[]
   workSets: number
