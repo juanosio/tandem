@@ -7,6 +7,7 @@ export interface ExerciseMediaEntry {
   gif?: string
   video?: string // mp4 propio (pesa menos y se ve más nítido que gif)
   photo?: string
+  approx?: boolean // BEST OPTION: GIF solo referencial, no es el ejercicio exacto -> avisar que vea el video
 }
 
 export const EXERCISE_MEDIA: Record<string, ExerciseMediaEntry> = {
@@ -50,4 +51,64 @@ export const EXERCISE_MEDIA: Record<string, ExerciseMediaEntry> = {
   'overhead-cable-triceps-extension-rope': { gif: 'media/overhead-cable-triceps-extension-rope.gif' },
   'seated-calf-raise': { gif: 'media/seated-calf-raise.gif' },
   'smith-machine-shrug': { gif: 'media/smith-machine-shrug.gif' },
+  // Principales (lote 3)
+  'cable-rear-delt-flye': { gif: 'media/cable-rear-delt-flye.gif' },
+  'db-walking-lunge': { gif: 'media/db-walking-lunge.gif' },
+  'hack-squat': { gif: 'media/hack-squat.gif' },
+  'lean-back-lat-pulldown': { gif: 'media/lean-back-lat-pulldown.gif' },
+  'leg-press-calf-press': { gif: 'media/leg-press-calf-press.gif' },
+  'machine-chest-press': { gif: 'media/machine-chest-press.gif' },
+  'machine-crunch': { gif: 'media/machine-crunch.gif' },
+  'machine-preacher-curl': { gif: 'media/machine-preacher-curl.gif' },
+  'seated-db-shoulder-press': { gif: 'media/seated-db-shoulder-press.gif' },
+  'smith-machine-row': { gif: 'media/smith-machine-row.gif' },
+  'triceps-pressdown-bar': { gif: 'media/triceps-pressdown-bar.gif' },
+  // Principales BEST OPTION (referenciales: ver el video)
+  'incline-db-press': { gif: 'media/incline-db-press.gif', approx: true },
+  'bottom-half-seated-cable-flye': { gif: 'media/bottom-half-seated-cable-flye.gif', approx: true },
+  'cable-paused-shrug-in': { gif: 'media/cable-paused-shrug-in.gif', approx: true },
+  'chest-supported-tbar-row': { gif: 'media/chest-supported-tbar-row.gif', approx: true },
+  'dual-handle-lat-pulldown': { gif: 'media/dual-handle-lat-pulldown.gif', approx: true },
+  'ez-bar-skull-crusher': { gif: 'media/ez-bar-skull-crusher.gif', approx: true },
+  'machine-shrug': { gif: 'media/machine-shrug.gif', approx: true },
+  'smith-static-lunge-elevated': { gif: 'media/smith-static-lunge-elevated.gif', approx: true },
+  // Alternativas (lote 3)
+  'wide-grip-lat-pulldown': { gif: 'media/wide-grip-lat-pulldown.gif' },
+  'lean-in-db-lateral-raise': { gif: 'media/lean-in-db-lateral-raise.gif' },
+  'db-row': { gif: 'media/db-row.gif' },
+  'incline-db-stretch-curl': { gif: 'media/incline-db-stretch-curl.gif' },
+  'snatch-grip-rdl': { gif: 'media/snatch-grip-rdl.gif' },
+  'sissy-squat': { gif: 'media/sissy-squat.gif' },
+  'neutral-grip-pullup': { gif: 'media/neutral-grip-pullup.gif' },
+  'chest-supported-incline-db-row': { gif: 'media/chest-supported-incline-db-row.gif' },
+  'rope-face-pull': { gif: 'media/rope-face-pull.gif' },
+  'reverse-pec-deck': { gif: 'media/reverse-pec-deck.gif' },
+  'ez-bar-curl': { gif: 'media/ez-bar-curl.gif' },
+  'db-curl': { gif: 'media/db-curl.gif' },
+  'db-preacher-curl': { gif: 'media/db-preacher-curl.gif' },
+  'db-step-up': { gif: 'media/db-step-up.gif' },
+  'goblet-squat': { gif: 'media/goblet-squat.gif' },
+  'cable-hip-abduction': { gif: 'media/cable-hip-abduction.gif' },
+  'lateral-band-walk': { gif: 'media/lateral-band-walk.gif' },
+  'dumbbell-chest-press': { gif: 'media/dumbbell-chest-press.gif' },
+  'cable-shoulder-press': { gif: 'media/cable-shoulder-press.gif' },
+  'db-triceps-kickback': { gif: 'media/db-triceps-kickback.gif' },
+  'bench-dip': { gif: 'media/bench-dip.gif' },
+  'hanging-leg-raise': { gif: 'media/hanging-leg-raise.gif' },
+  'glute-ham-raise': { gif: 'media/glute-ham-raise.gif' },
+  'cable-pull-through': { gif: 'media/cable-pull-through.gif' },
+  'lean-back-machine-pulldown': { gif: 'media/lean-back-machine-pulldown.webp' },
+  'pull-up': { gif: 'media/pull-up.gif' },
+  'hammer-curl': { gif: 'media/hammer-curl.gif' },
+  'hammer-preacher-curl': { gif: 'media/hammer-preacher-curl.webp' },
+  'concentration-cable-curl': { gif: 'media/concentration-cable-curl.gif' },
+  'katana-triceps-extension': { gif: 'media/katana-triceps-extension.gif' },
+  'triceps-pressdown-rope': { gif: 'media/triceps-pressdown-rope.gif' },
+  'swiss-ball-rollout': { gif: 'media/swiss-ball-rollout.gif' },
+  'long-lever-plank': { gif: 'media/long-lever-plank.gif' },
+  // Alternativas BEST OPTION (referenciales)
+  'incline-machine-press': { gif: 'media/incline-machine-press.gif', approx: true },
+  'db-skull-crusher': { gif: 'media/db-skull-crusher.gif', approx: true },
+  'seated-bayesian-cable-curl': { gif: 'media/seated-bayesian-cable-curl.gif', approx: true },
+  'weighted-decline-crunch': { gif: 'media/weighted-decline-crunch.gif', approx: true },
 }

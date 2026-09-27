@@ -193,13 +193,15 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
       {showAlt && (
         <div className="mt-1.5 space-y-1.5">
           {ex.alts && ex.alts.length > 0 ? ex.alts.map(alt => {
-            const gif = (alt.mediaKey && EXERCISE_MEDIA[alt.mediaKey]?.gif) || null
+            const entry = (alt.mediaKey && EXERCISE_MEDIA[alt.mediaKey]) || null
+            const gif = entry?.gif || null
             return (
               <div key={alt.es} className="flex items-center gap-2 rounded-2xl bg-[#B2EE37]/10 p-2.5">
                 {gif && <img src={gif} alt={alt.es} loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />}
                 <div className="flex-1">
                   <p className="text-xs leading-relaxed text-[#FCFCFC]">{alt.es}</p>
                   {alt.en && <p className="text-[10px] font-bold uppercase tracking-wide text-[#7C7C74]">{alt.en}</p>}
+                  {entry?.approx && <p className="text-[10px] font-black text-amber-300">⚠ GIF referencial — mira el video</p>}
                 </div>
                 <a href={alt.video ?? demoLink(alt.es)} target="_blank" rel="noreferrer"
                   className="shrink-0 rounded-xl bg-[#B2EE37] px-2.5 py-1.5 text-[11px] font-black text-black">

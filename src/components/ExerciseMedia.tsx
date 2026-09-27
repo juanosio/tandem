@@ -27,6 +27,11 @@ export default function ExerciseMedia({ ex, big = false }: { ex: Exercise; big?:
           loading="lazy"
           className={big ? 'mx-auto h-56 rounded-2xl object-contain' : 'mx-auto h-32 rounded-2xl object-contain'}
         />
+        {lib.approx && (
+          <p className="mx-auto mt-2 w-fit rounded-full bg-amber-400/15 px-3 py-1 text-[11px] font-black text-amber-300">
+            ⚠ GIF referencial — mira el video ▶
+          </p>
+        )}
       </div>
     )
   }

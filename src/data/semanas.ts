@@ -15,7 +15,7 @@ const S1_LUNES: Exercise[] = [
     alternativas: 'Press inclinado con mancuernas a 45° o Press inclinado en máquina a 45°',
     alts: [
       { es: 'Press inclinado con mancuernas a 45°', en: '45° Dumbbell Incline Press', video: 'https://www.youtube.com/watch?v=p2t9daxLpB8', mediaKey: 'incline-db-press' },
-      { es: 'Press inclinado en máquina a 45°', en: '45° Incline Machine Press', video: 'https://www.youtube.com/watch?v=b8fYnZ-usP0' },
+      { es: 'Press inclinado en máquina a 45°', en: '45° Incline Machine Press', video: 'https://www.youtube.com/watch?v=b8fYnZ-usP0', mediaKey: 'incline-machine-press' },
     ],
     descanso: '3-5 min',
     rpe: '~6',
@@ -52,7 +52,7 @@ const S1_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=yGnp0HU8BnA',
     alternativas: 'Jalón al pecho con agarre ancho o Jalón con doble agarre (dorsal medio y laterales)',
     alts: [
-      { es: 'Jalón al pecho con agarre ancho', en: 'Wide-Grip Lat Pulldown', video: 'https://www.youtube.com/watch?v=IYXRrYXfVLc' },
+      { es: 'Jalón al pecho con agarre ancho', en: 'Wide-Grip Lat Pulldown', video: 'https://www.youtube.com/watch?v=IYXRrYXfVLc', mediaKey: 'wide-grip-lat-pulldown' },
       { es: 'Jalón con doble agarre (dorsal medio y laterales)', en: 'Dual-Handle Lat Pulldown', video: 'https://www.youtube.com/watch?v=NwQ5Ch5t5Vk', mediaKey: 'dual-handle-lat-pulldown' },
     ],
     descanso: '2-3 min',
@@ -72,7 +72,7 @@ const S1_LUNES: Exercise[] = [
     alternativas: 'Elevación lateral en polea alta con brazalete o Elevación lateral inclinada con mancuerna',
     alts: [
       { es: 'Elevación lateral en polea alta con brazalete', en: 'High Cable Cuffed Lateral Raise', video: 'https://www.youtube.com/watch?v=8m2jNHBP580' },
-      { es: 'Elevación lateral inclinada con mancuerna', en: 'Lean-In DB Lateral Raise', video: 'https://www.youtube.com/watch?v=BmYuAG2j2co' },
+      { es: 'Elevación lateral inclinada con mancuerna', en: 'Lean-In DB Lateral Raise', video: 'https://www.youtube.com/watch?v=BmYuAG2j2co', mediaKey: 'lean-in-db-lateral-raise' },
     ],
     descanso: '1-2 min',
     rpe: '~6',
@@ -91,7 +91,7 @@ const S1_LUNES: Exercise[] = [
     alternativas: 'Remo en máquina Smith o Remo con mancuerna',
     alts: [
       { es: 'Remo en máquina Smith', en: 'Smith Machine Row', video: 'https://www.youtube.com/watch?v=Wmivm40AV3Q', mediaKey: 'smith-machine-row' },
-      { es: 'Remo con mancuerna', en: 'DB Row', video: 'https://www.youtube.com/watch?v=roKtfQZbxzg' },
+      { es: 'Remo con mancuerna', en: 'DB Row', video: 'https://www.youtube.com/watch?v=roKtfQZbxzg', mediaKey: 'db-row' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -110,7 +110,7 @@ const S1_LUNES: Exercise[] = [
     alternativas: 'Extensión de tríceps en polea sobre la cabeza (cuerda) o Rompecráneos con mancuernas',
     alts: [
       { es: 'Extensión de tríceps en polea sobre la cabeza (cuerda)', en: 'Overhead Cable Triceps Extension (Rope)', video: 'https://www.youtube.com/watch?v=GYoUoVNlbGc', mediaKey: 'overhead-cable-triceps-extension-rope' },
-      { es: 'Rompecráneos con mancuernas', en: 'DB Skull Crusher', video: 'https://www.youtube.com/watch?v=fbLTzgTKOR8' },
+      { es: 'Rompecráneos con mancuernas', en: 'DB Skull Crusher', video: 'https://www.youtube.com/watch?v=fbLTzgTKOR8', mediaKey: 'db-skull-crusher' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -128,8 +128,8 @@ const S1_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=CWH5J_7kzjM',
     alternativas: 'Curl bayesiano sentado en polea alta o Curl en banco inclinado con mancuernas',
     alts: [
-      { es: 'Curl bayesiano sentado en polea alta', en: 'Seated Super Bayesian High Cable Curl', video: 'https://www.youtube.com/watch?v=jQ9rkfvAbIc' },
-      { es: 'Curl en banco inclinado con mancuernas', en: 'Incline DB Stretch-Curl', video: 'https://www.youtube.com/watch?v=Z0NIYS9nyoQ' },
+      { es: 'Curl bayesiano sentado en polea alta', en: 'Seated Super Bayesian High Cable Curl', video: 'https://www.youtube.com/watch?v=jQ9rkfvAbIc', mediaKey: 'seated-bayesian-cable-curl' },
+      { es: 'Curl en banco inclinado con mancuernas', en: 'Incline DB Stretch-Curl', video: 'https://www.youtube.com/watch?v=Z0NIYS9nyoQ', mediaKey: 'incline-db-stretch-curl' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -213,7 +213,7 @@ const S1_VIERNES: Exercise[] = [
     alternativas: 'Press de pecho en máquina o Press de pecho con mancuernas',
     alts: [
       { es: 'Press de pecho en máquina', en: 'Chest Press Machine', video: 'https://www.youtube.com/watch?v=zDecGJLyVm8', mediaKey: 'machine-chest-press' },
-      { es: 'Press de pecho con mancuernas', en: 'Dumbbell Chest Press', video: 'https://www.youtube.com/watch?v=zGXvPjlgVkk' },
+      { es: 'Press de pecho con mancuernas', en: 'Dumbbell Chest Press', video: 'https://www.youtube.com/watch?v=zGXvPjlgVkk', mediaKey: 'dumbbell-chest-press' },
     ],
     descanso: '3-5 min',
     rpe: '~6',
@@ -231,7 +231,7 @@ const S1_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=SCQVmN1gYsk',
     alternativas: 'Press de hombros en polea o Press de hombros sentado con mancuernas',
     alts: [
-      { es: 'Press de hombros en polea', en: 'Cable Shoulder Press', video: 'https://www.youtube.com/watch?v=OfjncdW_Vyc' },
+      { es: 'Press de hombros en polea', en: 'Cable Shoulder Press', video: 'https://www.youtube.com/watch?v=OfjncdW_Vyc', mediaKey: 'cable-shoulder-press' },
       { es: 'Press de hombros sentado con mancuernas', en: 'Seated DB Shoulder Press', video: 'https://www.youtube.com/watch?v=B8PB5RPhTWQ', mediaKey: 'seated-db-shoulder-press' },
     ],
     descanso: '2-3 min',
@@ -270,7 +270,7 @@ const S1_VIERNES: Exercise[] = [
     alternativas: 'Elevación lateral en polea alta con brazalete o Elevación lateral inclinada con mancuerna',
     alts: [
       { es: 'Elevación lateral en polea alta con brazalete', en: 'High Cable Cuffed Lateral Raise', video: 'https://www.youtube.com/watch?v=8m2jNHBP580' },
-      { es: 'Elevación lateral inclinada con mancuerna', en: 'Lean-In DB Lateral Raise', video: 'https://www.youtube.com/watch?v=BmYuAG2j2co' },
+      { es: 'Elevación lateral inclinada con mancuerna', en: 'Lean-In DB Lateral Raise', video: 'https://www.youtube.com/watch?v=BmYuAG2j2co', mediaKey: 'lean-in-db-lateral-raise' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -289,7 +289,7 @@ const S1_VIERNES: Exercise[] = [
     alternativas: 'Extensión de tríceps en polea sobre la cabeza (cuerda) o Rompecráneos con mancuernas',
     alts: [
       { es: 'Extensión de tríceps en polea sobre la cabeza (cuerda)', en: 'Overhead Cable Triceps Extension (Rope)', video: 'https://www.youtube.com/watch?v=GYoUoVNlbGc', mediaKey: 'overhead-cable-triceps-extension-rope' },
-      { es: 'Rompecráneos con mancuernas', en: 'DB Skull Crusher', video: 'https://www.youtube.com/watch?v=fbLTzgTKOR8' },
+      { es: 'Rompecráneos con mancuernas', en: 'DB Skull Crusher', video: 'https://www.youtube.com/watch?v=fbLTzgTKOR8', mediaKey: 'db-skull-crusher' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -307,8 +307,8 @@ const S1_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=oRxTKRtP8RE',
     alternativas: 'Patada de tríceps con mancuerna o Fondos en banco',
     alts: [
-      { es: 'Patada de tríceps con mancuerna', en: 'DB Triceps Kickback', video: 'https://www.youtube.com/watch?v=YdUUYFgpA7g' },
-      { es: 'Fondos en banco', en: 'Bench Dip', video: 'https://www.youtube.com/watch?v=3CaIq8jZe18' },
+      { es: 'Patada de tríceps con mancuerna', en: 'DB Triceps Kickback', video: 'https://www.youtube.com/watch?v=YdUUYFgpA7g', mediaKey: 'db-triceps-kickback' },
+      { es: 'Fondos en banco', en: 'Bench Dip', video: 'https://www.youtube.com/watch?v=3CaIq8jZe18', mediaKey: 'bench-dip' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -326,7 +326,7 @@ const S1_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=w86Ph4iQgBM',
     alternativas: 'Elevación de piernas colgado o Vela modificada',
     alts: [
-      { es: 'Elevación de piernas colgado', en: 'Hanging Leg Raise', video: 'https://www.youtube.com/watch?v=rGqwkinWqYI' },
+      { es: 'Elevación de piernas colgado', en: 'Hanging Leg Raise', video: 'https://www.youtube.com/watch?v=rGqwkinWqYI', mediaKey: 'hanging-leg-raise' },
       { es: 'Vela modificada', en: 'Modified Candlestick', video: 'https://www.youtube.com/watch?v=-XVRl8KU7x0' },
     ],
     descanso: '1-2 min',
@@ -386,8 +386,8 @@ const S1_JUEVES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=BC_eDtrB-M4',
     alternativas: 'Step-up con mancuernas o Sentadilla goblet',
     alts: [
-      { es: 'Step-up con mancuernas', en: 'DB Step-Up', video: 'https://www.youtube.com/watch?v=3FNfi_PrP9Y' },
-      { es: 'Sentadilla goblet', en: 'Goblet Squat', video: 'https://www.youtube.com/watch?v=S2agsLlUSII' },
+      { es: 'Step-up con mancuernas', en: 'DB Step-Up', video: 'https://www.youtube.com/watch?v=3FNfi_PrP9Y', mediaKey: 'db-step-up' },
+      { es: 'Sentadilla goblet', en: 'Goblet Squat', video: 'https://www.youtube.com/watch?v=S2agsLlUSII', mediaKey: 'goblet-squat' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -405,8 +405,8 @@ const S1_JUEVES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=pozooPg6PBE',
     alternativas: 'Abducción de cadera en polea o Caminata lateral con banda',
     alts: [
-      { es: 'Abducción de cadera en polea', en: 'Cable Hip Abduction', video: 'https://www.youtube.com/watch?v=552L1K3Rb_Q' },
-      { es: 'Caminata lateral con banda', en: 'Lateral Band Walk', video: 'https://www.youtube.com/watch?v=sOYvvFPYdsU' },
+      { es: 'Abducción de cadera en polea', en: 'Cable Hip Abduction', video: 'https://www.youtube.com/watch?v=552L1K3Rb_Q', mediaKey: 'cable-hip-abduction' },
+      { es: 'Caminata lateral con banda', en: 'Lateral Band Walk', video: 'https://www.youtube.com/watch?v=sOYvvFPYdsU', mediaKey: 'lateral-band-walk' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -446,7 +446,7 @@ const S1_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=lA4_1F9EAFU',
     alternativas: 'Dominadas con agarre neutro o Jalón con doble agarre (dorsal medio y laterales)',
     alts: [
-      { es: 'Dominadas con agarre neutro', en: 'Neutral-Grip Pull-Up', video: 'https://www.youtube.com/watch?v=b0ypSz63UGo' },
+      { es: 'Dominadas con agarre neutro', en: 'Neutral-Grip Pull-Up', video: 'https://www.youtube.com/watch?v=b0ypSz63UGo', mediaKey: 'neutral-grip-pullup' },
       { es: 'Jalón con doble agarre (dorsal medio y laterales)', en: 'Dual-Handle Lat Pulldown', video: 'https://www.youtube.com/watch?v=NwQ5Ch5t5Vk', mediaKey: 'dual-handle-lat-pulldown' },
     ],
     descanso: '2-3 min',
@@ -466,7 +466,7 @@ const S1_MIERCOLES: Exercise[] = [
     alternativas: 'Remo en barra T con apoyo al pecho o Remo con mancuernas en banco inclinado con apoyo',
     alts: [
       { es: 'Remo en barra T con apoyo al pecho', en: 'Chest-Supported T-Bar Row', video: 'https://www.youtube.com/watch?v=q8qlHwcuOtc', mediaKey: 'chest-supported-tbar-row' },
-      { es: 'Remo con mancuernas en banco inclinado con apoyo al pecho', en: 'Chest-Supported Incline DB Row', video: 'https://www.youtube.com/watch?v=okCWuhxJEvw' },
+      { es: 'Remo con mancuernas en banco inclinado con apoyo al pecho', en: 'Chest-Supported Incline DB Row', video: 'https://www.youtube.com/watch?v=okCWuhxJEvw', mediaKey: 'chest-supported-incline-db-row' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -484,8 +484,8 @@ const S1_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=6G5DmVaocGM',
     alternativas: 'Face pull con cuerda o Contractora inversa (pec deck inverso)',
     alts: [
-      { es: 'Face pull con cuerda', en: 'Rope Face Pull', video: 'https://www.youtube.com/watch?v=GhrVM-jPIEA' },
-      { es: 'Contractora inversa (pec deck inverso)', en: 'Reverse Pec Deck', video: 'https://www.youtube.com/watch?v=Y8fb_rtEU_4' },
+      { es: 'Face pull con cuerda', en: 'Rope Face Pull', video: 'https://www.youtube.com/watch?v=GhrVM-jPIEA', mediaKey: 'rope-face-pull' },
+      { es: 'Contractora inversa (pec deck inverso)', en: 'Reverse Pec Deck', video: 'https://www.youtube.com/watch?v=Y8fb_rtEU_4', mediaKey: 'reverse-pec-deck' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -522,8 +522,8 @@ const S1_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=ck1zjNTnFew',
     alternativas: 'Curl con barra EZ libre (barra Z, no recta) o Curl con mancuernas',
     alts: [
-      { es: 'Curl con barra EZ libre (barra Z/serpiente, NO recta)', en: 'EZ Bar Curl', video: 'https://www.youtube.com/watch?v=WMrgn4GG7mI' },
-      { es: 'Curl con mancuernas', en: 'DB Curl', video: 'https://www.youtube.com/watch?v=XxGCRSJmgwY' },
+      { es: 'Curl con barra EZ libre (barra Z/serpiente, NO recta)', en: 'EZ Bar Curl', video: 'https://www.youtube.com/watch?v=WMrgn4GG7mI', mediaKey: 'ez-bar-curl' },
+      { es: 'Curl con mancuernas', en: 'DB Curl', video: 'https://www.youtube.com/watch?v=XxGCRSJmgwY', mediaKey: 'db-curl' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -542,7 +542,7 @@ const S1_MIERCOLES: Exercise[] = [
     alternativas: 'Curl predicador con barra EZ (barra Z, no recta) o Curl predicador con mancuernas',
     alts: [
       { es: 'Curl predicador con barra EZ (barra Z/serpiente, NO recta)', en: 'EZ Bar Preacher Curl', video: 'https://www.youtube.com/watch?v=Dn7qgf9iSH8', mediaKey: 'ez-bar-preacher-curl' },
-      { es: 'Curl predicador con mancuernas', en: 'DB Preacher Curl', video: 'https://www.youtube.com/watch?v=WTkQLAethtg' },
+      { es: 'Curl predicador con mancuernas', en: 'DB Preacher Curl', video: 'https://www.youtube.com/watch?v=WTkQLAethtg', mediaKey: 'db-preacher-curl' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -602,7 +602,7 @@ const S1_MARTES: Exercise[] = [
     alternativas: 'Peso muerto rumano con mancuernas o Peso muerto rumano con agarre abierto (snatch)',
     alts: [
       { es: 'Peso muerto rumano con mancuernas', en: 'DB RDL', video: 'https://www.youtube.com/watch?v=VRwSgUoj7uI', mediaKey: 'db-rdl' },
-      { es: 'Peso muerto rumano con agarre abierto (snatch)', en: 'Snatch-Grip RDL', video: 'https://www.youtube.com/watch?v=b8fmEaXHapU' },
+      { es: 'Peso muerto rumano con agarre abierto (snatch)', en: 'Snatch-Grip RDL', video: 'https://www.youtube.com/watch?v=b8fmEaXHapU', mediaKey: 'snatch-grip-rdl' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -621,7 +621,7 @@ const S1_MARTES: Exercise[] = [
     alternativas: 'Nórdico inverso o Sentadilla sissy',
     alts: [
       { es: 'Nórdico inverso', en: 'Reverse Nordic', video: 'https://www.youtube.com/watch?v=D-kqUKEQZZ0' },
-      { es: 'Sentadilla sissy', en: 'Sissy Squat', video: 'https://www.youtube.com/watch?v=eWAjlO4FWPQ' },
+      { es: 'Sentadilla sissy', en: 'Sissy Squat', video: 'https://www.youtube.com/watch?v=eWAjlO4FWPQ', mediaKey: 'sissy-squat' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -658,7 +658,7 @@ const S1_MARTES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=epBrpaGHMcg',
     alternativas: 'Crunch declinado con peso o Crunch en máquina',
     alts: [
-      { es: 'Crunch declinado con peso', en: 'Weighted Decline Crunch', video: 'https://www.youtube.com/watch?v=ZheUsKqU81M' },
+      { es: 'Crunch declinado con peso', en: 'Weighted Decline Crunch', video: 'https://www.youtube.com/watch?v=ZheUsKqU81M', mediaKey: 'weighted-decline-crunch' },
       { es: 'Crunch en máquina', en: 'Machine Crunch', video: 'https://www.youtube.com/watch?v=K2yKEoazT3g', mediaKey: 'machine-crunch' },
     ],
     descanso: '1-2 min',
@@ -749,7 +749,7 @@ const S6_LUNES: Exercise[] = [
     alternativas: 'Press inclinado con barra a 45° o Press inclinado en máquina a 45°',
     alts: [
       { es: 'Press inclinado con barra a 45°', en: '45° Incline Barbell Press', video: 'https://www.youtube.com/watch?v=vqQ9ok0dEgk', mediaKey: 'incline-barbell-press' },
-      { es: 'Press inclinado en máquina a 45°', en: '45° Incline Machine Press', video: 'https://www.youtube.com/watch?v=b8fYnZ-usP0' },
+      { es: 'Press inclinado en máquina a 45°', en: '45° Incline Machine Press', video: 'https://www.youtube.com/watch?v=b8fYnZ-usP0', mediaKey: 'incline-machine-press' },
     ],
     descanso: '3-5 min',
     rpe: '~6',
@@ -786,7 +786,7 @@ const S6_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=NwQ5Ch5t5Vk',
     alternativas: 'Jalón al pecho con agarre ancho o Dominadas con agarre ancho',
     alts: [
-      { es: 'Jalón al pecho con agarre ancho', en: 'Wide-Grip Lat Pulldown', video: 'https://www.youtube.com/watch?v=IYXRrYXfVLc' },
+      { es: 'Jalón al pecho con agarre ancho', en: 'Wide-Grip Lat Pulldown', video: 'https://www.youtube.com/watch?v=IYXRrYXfVLc', mediaKey: 'wide-grip-lat-pulldown' },
       { es: 'Dominadas con agarre ancho', en: 'Wide-Grip Pull-Up', video: 'https://www.youtube.com/watch?v=yGnp0HU8BnA', mediaKey: 'wide-grip-pullup' },
     ],
     descanso: '2-3 min',
@@ -807,7 +807,7 @@ const S6_LUNES: Exercise[] = [
     alternativas: 'Remo Pendlay con déficit o Remo con mancuerna a 1 brazo',
     alts: [
       { es: 'Remo Pendlay con déficit', en: 'Pendlay Deficit Row', video: 'https://www.youtube.com/watch?v=MmuyHKYCLps', mediaKey: 'deficit-pendlay-row' },
-      { es: 'Remo con mancuerna a 1 brazo', en: 'Single-Arm DB Row', video: 'https://www.youtube.com/watch?v=roKtfQZbxzg' },
+      { es: 'Remo con mancuerna a 1 brazo', en: 'Single-Arm DB Row', video: 'https://www.youtube.com/watch?v=roKtfQZbxzg', mediaKey: 'db-row' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -850,8 +850,8 @@ const S6_MARTES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=lEeCPhlFZig',
     alternativas: 'Elevación glúteo-isquio (GHR) o Pull through en polea',
     alts: [
-      { es: 'Elevación glúteo-isquio (GHR)', en: 'Glute-Ham Raise', video: 'https://www.youtube.com/watch?v=9ksG-O0ZUto' },
-      { es: 'Pull through en polea', en: 'Cable Pull Through', video: 'https://www.youtube.com/watch?v=eFsNZc69m10' },
+      { es: 'Elevación glúteo-isquio (GHR)', en: 'Glute-Ham Raise', video: 'https://www.youtube.com/watch?v=9ksG-O0ZUto', mediaKey: 'glute-ham-raise' },
+      { es: 'Pull through en polea', en: 'Cable Pull Through', video: 'https://www.youtube.com/watch?v=eFsNZc69m10', mediaKey: 'cable-pull-through' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -903,8 +903,8 @@ const S6_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=Zjzt4MRbAlc',
     alternativas: 'Jalón inclinado atrás en máquina o Dominadas',
     alts: [
-      { es: 'Jalón inclinado atrás en máquina', en: 'Lean-Back Machine Pulldown', video: 'https://www.youtube.com/watch?v=CrfvmSGfT2c' },
-      { es: 'Dominadas', en: 'Pull-Up', video: 'https://www.youtube.com/watch?v=5h_NehuTqe4' },
+      { es: 'Jalón inclinado atrás en máquina', en: 'Lean-Back Machine Pulldown', video: 'https://www.youtube.com/watch?v=CrfvmSGfT2c', mediaKey: 'lean-back-machine-pulldown' },
+      { es: 'Dominadas', en: 'Pull-Up', video: 'https://www.youtube.com/watch?v=5h_NehuTqe4', mediaKey: 'pull-up' },
     ],
     descanso: '2-3 min',
     rpe: '~6',
@@ -953,8 +953,8 @@ const S6_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=TTgICSfj1hY',
     alternativas: 'Curl martillo con mancuernas o Curl martillo en predicador',
     alts: [
-      { es: 'Curl martillo con mancuernas', en: 'Hammer Curl', video: 'https://www.youtube.com/watch?v=xY3sQXYhk7A' },
-      { es: 'Curl martillo en predicador', en: 'Hammer Preacher Curl', video: 'https://www.youtube.com/watch?v=dEdnC3ca-Yg' },
+      { es: 'Curl martillo con mancuernas', en: 'Hammer Curl', video: 'https://www.youtube.com/watch?v=xY3sQXYhk7A', mediaKey: 'hammer-curl' },
+      { es: 'Curl martillo en predicador', en: 'Hammer Preacher Curl', video: 'https://www.youtube.com/watch?v=dEdnC3ca-Yg', mediaKey: 'hammer-preacher-curl' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -972,8 +972,8 @@ const S6_MIERCOLES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=Oq7gJuAuJh0',
     alternativas: 'Curl concentrado en polea o Curl predicador con mancuernas',
     alts: [
-      { es: 'Curl concentrado en polea', en: 'Concentration Cable Curl', video: 'https://www.youtube.com/watch?v=BFZyW_7ld0c' },
-      { es: 'Curl predicador con mancuernas', en: 'DB Preacher Curl', video: 'https://www.youtube.com/watch?v=WTkQLAethtg' },
+      { es: 'Curl concentrado en polea', en: 'Concentration Cable Curl', video: 'https://www.youtube.com/watch?v=BFZyW_7ld0c', mediaKey: 'concentration-cable-curl' },
+      { es: 'Curl predicador con mancuernas', en: 'DB Preacher Curl', video: 'https://www.youtube.com/watch?v=WTkQLAethtg', mediaKey: 'db-preacher-curl' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -1066,8 +1066,8 @@ const S6_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=oDKGCsTjAk8',
     alternativas: 'Rompecráneos con mancuernas o Extensión de tríceps katana',
     alts: [
-      { es: 'Rompecráneos con mancuernas', en: 'DB Skull Crusher', video: 'https://www.youtube.com/watch?v=fbLTzgTKOR8' },
-      { es: 'Extensión de tríceps katana', en: 'Katana Triceps Extension', video: 'https://www.youtube.com/watch?v=R7f45Mv7yyg' },
+      { es: 'Rompecráneos con mancuernas', en: 'DB Skull Crusher', video: 'https://www.youtube.com/watch?v=fbLTzgTKOR8', mediaKey: 'db-skull-crusher' },
+      { es: 'Extensión de tríceps katana', en: 'Katana Triceps Extension', video: 'https://www.youtube.com/watch?v=R7f45Mv7yyg', mediaKey: 'katana-triceps-extension' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -1085,8 +1085,8 @@ const S6_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=o4eazahiXQw',
     alternativas: 'Press de tríceps en polea (cuerda) o Patada de tríceps con mancuerna',
     alts: [
-      { es: 'Press de tríceps en polea (cuerda)', en: 'Triceps Pressdown (Rope)', video: 'https://www.youtube.com/watch?v=bCa036rGtVU' },
-      { es: 'Patada de tríceps con mancuerna', en: 'DB Triceps Kickback', video: 'https://www.youtube.com/watch?v=YdUUYFgpA7g' },
+      { es: 'Press de tríceps en polea (cuerda)', en: 'Triceps Pressdown (Rope)', video: 'https://www.youtube.com/watch?v=bCa036rGtVU', mediaKey: 'triceps-pressdown-rope' },
+      { es: 'Patada de tríceps con mancuerna', en: 'DB Triceps Kickback', video: 'https://www.youtube.com/watch?v=YdUUYFgpA7g', mediaKey: 'db-triceps-kickback' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -1104,8 +1104,8 @@ const S6_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=gGTgyCU9gcg',
     alternativas: 'Rollout con balón suizo o Plancha larga (long lever)',
     alts: [
-      { es: 'Rollout con balón suizo', en: 'Swiss Ball Rollout', video: 'https://www.youtube.com/watch?v=FvekMyIs-yk' },
-      { es: 'Plancha larga (long lever)', en: 'Long Lever Plank', video: 'https://www.youtube.com/watch?v=9rFS1gg0vJM' },
+      { es: 'Rollout con balón suizo', en: 'Swiss Ball Rollout', video: 'https://www.youtube.com/watch?v=FvekMyIs-yk', mediaKey: 'swiss-ball-rollout' },
+      { es: 'Plancha larga (long lever)', en: 'Long Lever Plank', video: 'https://www.youtube.com/watch?v=9rFS1gg0vJM', mediaKey: 'long-lever-plank' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
