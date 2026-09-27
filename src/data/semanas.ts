@@ -4,7 +4,7 @@ import { RUTINA } from './rutina'
 // Modelo por semanas: la intensidad/cambios van por semana.
 // Semana 1 Lunes = datos ricos del usuario (ES+EN, videos, descanso, RPE).
 // Resto de días/semanas: fallback a la tabla base hasta que los definamos.
-export const SEMANAS_DISPONIBLES = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+export const SEMANAS_DISPONIBLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
 const S1_LUNES: Exercise[] = [
   {
@@ -188,6 +188,21 @@ export function getDayExercises(semana: number, dia: string): Exercise[] {
   if (semana === 9 && dia === 'Miércoles') return S9_MIERCOLES
   if (semana === 9 && dia === 'Jueves') return S9_JUEVES
   if (semana === 9 && dia === 'Viernes') return S9_VIERNES
+  if (semana === 10 && dia === 'Lunes') return S10_LUNES
+  if (semana === 10 && dia === 'Martes') return S10_MARTES
+  if (semana === 10 && dia === 'Miércoles') return S10_MIERCOLES
+  if (semana === 10 && dia === 'Jueves') return S10_JUEVES
+  if (semana === 10 && dia === 'Viernes') return S10_VIERNES
+  if (semana === 11 && dia === 'Lunes') return S11_LUNES
+  if (semana === 11 && dia === 'Martes') return S11_MARTES
+  if (semana === 11 && dia === 'Miércoles') return S11_MIERCOLES
+  if (semana === 11 && dia === 'Jueves') return S11_JUEVES
+  if (semana === 11 && dia === 'Viernes') return S11_VIERNES
+  if (semana === 12 && dia === 'Lunes') return S12_LUNES
+  if (semana === 12 && dia === 'Martes') return S12_MARTES
+  if (semana === 12 && dia === 'Miércoles') return S12_MIERCOLES
+  if (semana === 12 && dia === 'Jueves') return S12_JUEVES
+  if (semana === 12 && dia === 'Viernes') return S12_VIERNES
   return RUTINA.filter(e => e.dia === dia).sort((a, b) => a.orden - b.orden)
 }
 
@@ -1246,3 +1261,20 @@ const S9_MARTES = COPY(S8_MARTES, 9, 'mar')
 const S9_MIERCOLES = COPY(S8_MIERCOLES, 9, 'mie')
 const S9_JUEVES = COPY(S8_JUEVES, 9, 'jue')
 const S9_VIERNES = COPY(S8_VIERNES, 9, 'vie')
+
+// Semanas 10-12: copias exactas de la Semana 9. Rutina de 12 semanas completa.
+const S10_LUNES = COPY(S9_LUNES, 10, 'lun')
+const S10_MARTES = COPY(S9_MARTES, 10, 'mar')
+const S10_MIERCOLES = COPY(S9_MIERCOLES, 10, 'mie')
+const S10_JUEVES = COPY(S9_JUEVES, 10, 'jue')
+const S10_VIERNES = COPY(S9_VIERNES, 10, 'vie')
+const S11_LUNES = COPY(S9_LUNES, 11, 'lun')
+const S11_MARTES = COPY(S9_MARTES, 11, 'mar')
+const S11_MIERCOLES = COPY(S9_MIERCOLES, 11, 'mie')
+const S11_JUEVES = COPY(S9_JUEVES, 11, 'jue')
+const S11_VIERNES = COPY(S9_VIERNES, 11, 'vie')
+const S12_LUNES = COPY(S9_LUNES, 12, 'lun')
+const S12_MARTES = COPY(S9_MARTES, 12, 'mar')
+const S12_MIERCOLES = COPY(S9_MIERCOLES, 12, 'mie')
+const S12_JUEVES = COPY(S9_JUEVES, 12, 'jue')
+const S12_VIERNES = COPY(S9_VIERNES, 12, 'vie')
