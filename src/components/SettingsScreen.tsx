@@ -1,18 +1,54 @@
-import { useEffect, useState } from 'react'
-import { clearAll, getRestGap, PROFILE_LABEL, setRestGap, type Profile } from '../lib/storage'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { clearAll, exportBackup, getRestGap, importBackup, PROFILE_LABEL, setRestGap, type Profile } from '../lib/storage'
+import { isCloudConfigured } from '../lib/supabase'
+import { subscribeSync, syncStatus } from '../lib/sync'
+import RoutineEditor from './RoutineEditor'
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
 export default function SettingsScreen({
-  profile, setProfile, semana, setSemana, semanas,
+  profile, setProfile, semana, setSemana, semanas, onRoutineChange, session, onLogout,
 }: {
   profile: Profile
   setProfile: (p: Profile) => void
   semana: number
   setSemana: (s: number) => void
   semanas: number[]
+  onRoutineChange: () => void
+  session?: Profile
+  onLogout?: () => void
 }) {
+  const cloud = isCloudConfigured()
+  const cloudStatus = useSyncExternalStore(subscribeSync, syncStatus, syncStatus)
   const [gap, setGap] = useState(() => getRestGap())
+  const [wipe, setWipe] = useState(false)
+  const [note, setNote] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const download = () => {
+    const blob = new Blob([exportBackup()], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'tandem-copia.json'
+    a.click()
+    URL.revokeObjectURL(url)
+    setNote('Copia descargada. Guárdala fuera del teléfono.')
+  }
+
+  const restore = async (file: File | undefined) => {
+    if (!file) return
+    try {
+      const ok = importBackup(await file.text())
+      if (!ok) {
+        setNote('Ese archivo no es una copia de Tándem.')
+        return
+      }
+      location.reload()
+    } catch {
+      setNote('No se pudo leer la copia.')
+    }
+  }
   const change = (d: number) => {
     const v = Math.min(180, Math.max(0, gap + d))
     setGap(v)
@@ -29,6 +65,25 @@ export default function SettingsScreen({
   return (
     <div>
       <h2 className="mb-3 text-center text-2xl font-bold uppercase">Ajustes</h2>
+
+      {cloud && onLogout && (
+        <div className="mb-5 rounded-3xl bg-[#17191d] p-4">
+          <p className="text-sm font-bold uppercase tracking-wider text-[#7C7C74]">Sesión abierta</p>
+          <p className="mt-1 text-2xl font-bold">{PROFILE_LABEL[session ?? profile]}</p>
+          <p className="mt-1 text-sm leading-relaxed text-[#7C7C74]">
+            Al abrir la app entras a la rutina de {PROFILE_LABEL[session ?? profile]}. El botón de arriba solo cambia de quién estás mirando.
+          </p>
+          <p className="mt-2 text-sm text-[#B2EE37]">
+            {cloudStatus === 'syncing' && 'Subiendo…'}
+            {cloudStatus === 'ok' && 'Al día con la nube'}
+            {cloudStatus === 'offline' && 'Sin internet. Queda guardado en este teléfono y se sube al salir.'}
+            {cloudStatus === 'local' && 'Nube no conectada'}
+          </p>
+          <button onClick={onLogout} className="mt-3 min-h-12 w-full rounded-2xl bg-[#1f2227] text-base font-bold">
+            Cerrar sesión
+          </button>
+        </div>
+      )}
 
       <p className="mb-1.5 text-sm font-bold uppercase tracking-wider text-[#7C7C74]">Quién entrena</p>
       <div className="grid grid-cols-2 gap-2">
@@ -57,15 +112,38 @@ export default function SettingsScreen({
         <button onClick={() => change(15)} className="font-display h-14 w-14 rounded-2xl bg-[#1f2227] text-2xl font-semibold">+</button>
       </div>
 
+      <RoutineEditor profile={profile} semana={semana} onChange={onRoutineChange} />
+
       <p className="mb-1.5 mt-5 text-sm font-bold uppercase tracking-wider text-[#7C7C74]">Datos</p>
-      <button
-        onClick={() => { if (confirm('¿Borrar todos los pesos y checks de este teléfono?')) { clearAll(); location.reload() } }}
-        className="min-h-14 w-full rounded-2xl bg-[#1f2227] py-4 text-base font-bold text-red-400"
-      >
-        Borrar datos de este teléfono
-      </button>
+      <p className="mb-2 text-sm leading-relaxed text-[#7C7C74]">
+        {cloud
+          ? 'Los kilos se guardan en este teléfono y se suben a la nube en cuanto hay internet. La copia es un respaldo extra.'
+          : 'Los kilos viven en este teléfono. Descarga una copia si cambias de celular. Cuando conectemos la nube, se sincronizan solos.'}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <button onClick={download} className="min-h-14 rounded-2xl bg-[#1f2227] py-3 text-base font-bold">Descargar copia</button>
+        <button onClick={() => fileRef.current?.click()} className="min-h-14 rounded-2xl bg-[#1f2227] py-3 text-base font-bold">Restaurar copia</button>
+      </div>
+      <input ref={fileRef} type="file" accept="application/json,.json" className="hidden"
+        onChange={e => { restore(e.target.files?.[0]); e.target.value = '' }} />
+      {note && <p className="mt-2 text-sm text-[#B2EE37]">{note}</p>}
+
+      {!wipe ? (
+        <button onClick={() => setWipe(true)} className="mt-3 min-h-14 w-full rounded-2xl bg-[#1f2227] py-4 text-base font-bold text-red-400">
+          Borrar datos de este teléfono
+        </button>
+      ) : (
+        <div className="mt-3 rounded-3xl bg-[#17191d] p-4">
+          <p className="text-sm leading-relaxed">Esto borra los kilos de este teléfono. Si ya están en la nube, vuelven al sincronizar. La copia de la nube no se borra.</p>
+          <button onClick={download} className="mt-3 min-h-12 w-full rounded-2xl bg-[#1f2227] text-sm font-bold">Descargar copia antes</button>
+          <button onClick={() => { clearAll(); location.reload() }} className="mt-2 min-h-12 w-full rounded-2xl bg-red-500/15 text-sm font-bold text-red-400">
+            Sí, borrar todo
+          </button>
+          <button onClick={() => setWipe(false)} className="mt-2 min-h-12 w-full rounded-2xl text-sm font-bold text-[#7C7C74]">Cancelar</button>
+        </div>
+      )}
       <p className="mt-4 text-center text-sm leading-relaxed text-[#7C7C74]">
-        Fase 1 local (sin cuenta).<br />Fotos/videos: los que tú aportes. Videos de ejemplo: YouTube.
+        Fotos y videos: los que tú aportes. Videos de ejemplo: YouTube.
       </p>
     </div>
   )

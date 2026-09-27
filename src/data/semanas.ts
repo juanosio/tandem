@@ -1,5 +1,6 @@
 import type { CalentSet, Exercise } from '../types'
 import type { Profile } from '../lib/storage'
+import { withPreference } from '../lib/routine'
 import { getNoviaDayExercises } from './semanasNovia'
 import { RUTINA } from './rutina'
 
@@ -209,8 +210,8 @@ export function getYoDayExercises(semana: number, dia: string): Exercise[] {
 }
 
 export function getDayExercises(semana: number, dia: string, profile: Profile = 'yo'): Exercise[] {
-  if (profile === 'novia') return getNoviaDayExercises(semana, dia)
-  return getYoDayExercises(semana, dia)
+  const raw = profile === 'novia' ? getNoviaDayExercises(semana, dia) : getYoDayExercises(semana, dia)
+  return raw.map(ex => withPreference(ex, profile))
 }
 
 // Intensidad de una semana sobre una ficha base (misma técnica/videos/GIF,

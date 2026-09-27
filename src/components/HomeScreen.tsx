@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronRight, Dumbbell, Play, Sparkles, Timer, Trophy } from 'lucide-react'
 import { getDayExercises } from '../data/semanas'
 import { fmtMin, getAvgMs, getMarkedDates, isSetDone, PROFILE_LABEL, todayStr, type Profile } from '../lib/storage'
+import { useStorageRev } from '../lib/useStorage'
 
 interface Props {
   profile: Profile
   dia: string
   setDia: (d: string) => void
-  onStart: (startIdx: number, dateStr: string) => void
+  onStart: (startIdx: number, dateStr: string, warmup?: boolean) => void
   semana: number
   setSemana: (s: number) => void
   semanas: number[]
@@ -61,7 +62,8 @@ export default function HomeScreen({ profile, dia, setDia, onStart, semana, setS
     })
   }, [])
 
-  const trained = useMemo(() => new Set(getMarkedDates(profile)), [profile])
+  const rev = useStorageRev()
+  const trained = useMemo(() => new Set(getMarkedDates(profile)), [profile, rev])
   const weekTrained = thisWeek.filter(s => trained.has(s)).length
   const goal = 5 // Lun-Vie
 
@@ -181,11 +183,11 @@ export default function HomeScreen({ profile, dia, setDia, onStart, semana, setS
         </p>}
 
         {!isRest && (
-          <div className="mb-3 max-h-64 space-y-1 overflow-y-auto pr-1">
+          <div className="routine-scroll mb-3 max-h-64 space-y-1 overflow-y-auto pr-2">
             {list.map((e, i) => {
               const done = Array.from({ length: e.workSets }, (_, k) => isSetDone(profile, `${dayKey}:${e.id}:work${k}`)).every(Boolean)
               return (
-                <button key={e.id} onClick={() => onStart(i, dayKey)} className="flex min-h-11 w-full items-center gap-2.5 text-left">
+                <button key={e.id} onClick={() => onStart(i, dayKey, false)} className="flex min-h-11 w-full items-center gap-2.5 text-left">
                   <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${done ? 'bg-[#55F670] text-black' : 'bg-[#23262c] text-[#7C7C74]'}`}>
                     {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <span className="font-display">{i + 1}</span>}
                   </span>
@@ -202,7 +204,11 @@ export default function HomeScreen({ profile, dia, setDia, onStart, semana, setS
           <p className="rounded-2xl bg-[#1f2227] p-3 text-center text-sm text-[#7C7C74]">Recupera. Mañana se vuelve a entrenar.</p>
         ) : (
           <button
-            onClick={() => onStart(firstPending === -1 ? 0 : firstPending, selDate)}
+            onClick={() => {
+              const reviewing = doneCount === list.length && doneCount > 0
+              const idx = firstPending < 0 ? 0 : firstPending
+              onStart(idx, selDate, !reviewing && idx === 0)
+            }}
             className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#B2EE37] py-4 text-lg font-bold uppercase text-black"
           >
             {doneCount === list.length && doneCount > 0

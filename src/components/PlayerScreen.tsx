@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowLeftRight, Check, ChevronLeft, ChevronRight, Chevro
 import type { Exercise } from '../types'
 import { descansoMedio, TIPO_PESO_LABEL } from '../types'
 import { getHistory, getLastSession, getPeso, isSetDone, setPeso, toggleSetDone, type HistEntry, type Profile } from '../lib/storage'
+import { useStorageRev } from '../lib/useStorage'
 import ExerciseMedia from './ExerciseMedia'
 import { EXERCISE_MEDIA } from '../data/media'
 import { beep } from './RestScreen'
@@ -116,7 +117,12 @@ interface Props {
 export default function PlayerScreen({ ex, profile, date, index, total, isLast, semana, onPrev, onComplete }: Props) {
   // Clave de peso: por ejercicio (se hereda entre semanas), no por hueco de rutina.
   const wKey = ex.mediaKey ?? ex.id
+  const rev = useStorageRev()
   const [peso, setPesoState] = useState<number | ''>(() => getPeso(profile, wKey))
+  useEffect(() => {
+    if (document.activeElement?.id === 'peso-hoy') return
+    setPesoState(getPeso(profile, wKey))
+  }, [rev, profile, wKey])
   const [showAlt, setShowAlt] = useState(false)
   const [showRpe, setShowRpe] = useState(false)
   const [setRestUntil, setSetRestUntil] = useState<number | null>(null)
@@ -243,10 +249,19 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
         <button onClick={() => peso !== '' && onPeso(String(round05(Number(peso) - 2.5)))} className="h-14 w-14 rounded-2xl bg-[#1f2227] text-3xl font-black text-[#FCFCFC]">−</button>
         <div className="min-w-28 text-center">
           <input
-            type="number" inputMode="decimal" min={0} step={0.5} value={peso} onChange={e => onPeso(e.target.value)}
+            id="peso-hoy"
+            type="number" inputMode="decimal" min={0} step={0.5} value={peso}
+            onChange={e => onPeso(e.target.value)}
+            onBlur={() => {
+              if (peso === '' || Number(peso) <= 0) {
+                const saved = getPeso(profile, wKey)
+                if (saved !== '') setPesoState(saved)
+              }
+            }}
             placeholder="0" className="font-display w-28 rounded-2xl border border-[#2c2f36] bg-[#17191d] px-2 py-2 text-center text-3xl font-semibold"
           />
           <p className="mt-0.5 text-sm text-[#7C7C74]">kg de trabajo hoy</p>
+          {peso !== '' && Number(peso) > 0 && <p className="text-xs text-[#55F670]">Guardado en este teléfono</p>}
         </div>
         <button onClick={() => onPeso(String(round05((peso === '' ? 0 : Number(peso)) + 2.5)))} className="h-14 w-14 rounded-2xl bg-[#1f2227] text-3xl font-black text-[#FCFCFC]">+</button>
       </div>

@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { DIAS, descansoMedio } from './types'
+import { descansoMedio } from './types'
 import { getDayExercises, SEMANAS_DISPONIBLES } from './data/semanas'
 import { Dumbbell } from 'lucide-react'
 import { endSession, getRestGap, getWeek, isSetDone, PROFILE_LABEL, setWeek, startSession, todayStr, type Profile } from './lib/storage'
+import { restoreSession, signOut } from './lib/auth'
+import { isCloudConfigured } from './lib/supabase'
+import { startSync } from './lib/sync'
+import { useStorageRev } from './lib/useStorage'
+import LoginScreen from './components/LoginScreen'
 import BottomNav, { type Tab } from './components/BottomNav'
 import ErrorBoundary from './components/ErrorBoundary'
 import FinishScreen from './components/FinishScreen'
 import HomeScreen from './components/HomeScreen'
+import WarmupScreen from './components/WarmupScreen'
 import PlayerScreen from './components/PlayerScreen'
 import RestScreen, { beep } from './components/RestScreen'
 import ProgressScreen from './components/ProgressScreen'
@@ -31,6 +37,7 @@ type Slot = {
   restUntil: number | null
   restSecs: number
   finished: boolean
+  phase: 'warmup' | 'lift'
 }
 
 function freshSlot(): Slot {
@@ -43,16 +50,22 @@ function freshSlot(): Slot {
     restUntil: null,
     restSecs: 0,
     finished: false,
+    phase: 'lift',
   }
 }
 
 export default function App() {
+  const cloud = isCloudConfigured()
+  const [gate, setGate] = useState<'boot' | 'in' | 'out'>(cloud ? 'boot' : 'in')
+  const [sessionWho, setSessionWho] = useState<Profile>('yo')
   const [profile, setProfile] = useState<Profile>('yo')
   const [byProfile, setByProfile] = useState<Record<Profile, Slot>>(() => ({ yo: freshSlot(), novia: freshSlot() }))
   const [semana, setSemana] = useState<number>(() => getWeek('yo'))
+  const [routineRev, setRoutineRev] = useState(0)
+  const storageRev = useStorageRev()
   const slot = byProfile[profile]
 
-  const list = useMemo(() => getDayExercises(semana, slot.dia, profile), [semana, slot.dia, profile])
+  const list = useMemo(() => getDayExercises(semana, slot.dia, profile), [semana, slot.dia, profile, routineRev, storageRev])
   const ex = list[Math.min(slot.idx, Math.max(0, list.length - 1))]
 
   const update = (who: Profile, recipe: (cur: Slot) => Slot) => {
@@ -78,6 +91,30 @@ export default function App() {
   }
 
   useEffect(() => {
+    if (!cloud) return
+    let cancel = false
+    restoreSession().then(who => {
+      if (cancel) return
+      if (who) {
+        setSessionWho(who)
+        setProfile(who)
+        setSemana(getWeek(who))
+        setGate('in')
+        startSync()
+      } else setGate('out')
+    })
+    return () => { cancel = true }
+  }, [cloud])
+
+  const enter = (who: Profile) => {
+    setSessionWho(who)
+    setProfile(who)
+    setSemana(getWeek(who))
+    setGate('in')
+    startSync()
+  }
+
+  useEffect(() => {
     if (!slot.resting || slot.restUntil == null) return
     const overdue = slot.restUntil <= Date.now()
     const ms = Math.max(0, slot.restUntil - Date.now())
@@ -88,9 +125,18 @@ export default function App() {
     return () => clearTimeout(t)
   }, [profile, slot.resting, slot.restUntil, slot.tab])
 
-  const startAt = (i: number, dateStr: string) => {
+  const startAt = (i: number, dateStr: string, warmup = false) => {
     startSession(profile, dateStr, slot.dia, list.length)
-    update(profile, cur => ({ ...cur, activeDate: dateStr, idx: i, finished: false, resting: false, restUntil: null, tab: 'rutina' }))
+    update(profile, cur => ({
+      ...cur,
+      activeDate: dateStr,
+      idx: i,
+      finished: false,
+      resting: false,
+      restUntil: null,
+      tab: 'rutina',
+      phase: warmup ? 'warmup' : 'lift',
+    }))
   }
   const changeDia = (d: string) => update(profile, cur => ({ ...cur, dia: d, idx: 0, finished: false, resting: false, restUntil: null }))
   const changeProfile = (p: Profile) => {
@@ -120,6 +166,15 @@ export default function App() {
       restUntil: (cur.restUntil ?? Date.now()) + secs * 1000,
     }))
   }
+
+  if (gate === 'boot') {
+    return (
+      <div className="grid min-h-full place-items-center bg-[#0F1012] text-[#FCFCFC]">
+        <p className="text-4xl font-bold">Tándem</p>
+      </div>
+    )
+  }
+  if (gate === 'out') return <LoginScreen onSuccess={enter} />
 
   return (
     <div className="min-h-full bg-[#0F1012] text-[#FCFCFC]">
@@ -158,9 +213,11 @@ export default function App() {
                 dia={slot.dia}
                 date={slot.activeDate}
                 list={list}
-                onHome={() => update(profile, cur => ({ ...cur, tab: 'inicio', finished: false, idx: 0 }))}
-                onProgress={() => update(profile, cur => ({ ...cur, tab: 'progreso' }))}
+                onHome={() => update(profile, cur => ({ ...cur, tab: 'inicio', finished: false, idx: 0, phase: 'lift' }))}
+                onProgress={() => update(profile, cur => ({ ...cur, tab: 'progreso', phase: 'lift' }))}
               />
+            ) : slot.phase === 'warmup' ? (
+              <WarmupScreen profile={profile} onDone={() => update(profile, cur => ({ ...cur, phase: 'lift' }))} />
             ) : slot.resting && slot.restUntil != null ? (
               <RestScreen
                 profile={profile}
@@ -177,7 +234,7 @@ export default function App() {
               />
             ) : ex ? (
               <PlayerScreen
-                key={`${profile}-${ex.id}`}
+                key={`${profile}-${ex.id}-${ex.mediaKey ?? ''}`}
                 ex={ex}
                 profile={profile}
                 date={slot.activeDate}
@@ -192,25 +249,20 @@ export default function App() {
           </>
         )}
 
-        {slot.tab === 'progreso' && <ProgressScreen profile={profile} dia={slot.dia} semana={semana} />}
+        {slot.tab === 'progreso' && (
+          <ProgressScreen profile={profile} dia={slot.dia} setDia={changeDia} semana={semana} />
+        )}
         {slot.tab === 'ajustes' && (
           <SettingsScreen
             profile={profile} setProfile={changeProfile}
             semana={semana} setSemana={changeSemana} semanas={SEMANAS_DISPONIBLES}
+            onRoutineChange={() => setRoutineRev(n => n + 1)}
+            session={sessionWho}
+            onLogout={cloud ? async () => { await signOut(); setGate('out') } : undefined}
           />
         )}
         </ErrorBoundary>
 
-        {slot.tab === 'progreso' && (
-          <div className="mb-3 flex gap-1.5 overflow-x-auto">
-            {DIAS.map(d => (
-              <button key={d} onClick={() => changeDia(d)}
-                className={`min-h-11 shrink-0 rounded-2xl px-4 text-sm font-bold ${slot.dia === d ? 'bg-[#FCFCFC] text-black' : 'bg-[#1f2227] text-[#7C7C74]'}`}>
-                {d.slice(0, 3)}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
       <BottomNav tab={slot.tab} setTab={t => update(profile, cur => ({ ...cur, tab: t }))} />
     </div>

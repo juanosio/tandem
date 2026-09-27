@@ -8,6 +8,8 @@ import {
   isSetDone,
   type Profile,
 } from '../lib/storage'
+import CardioExtra from './CardioExtra'
+import { useStorageRev } from '../lib/useStorage'
 
 const fmtDur = (ms: number) => {
   const s = Math.max(0, Math.floor(ms / 1000))
@@ -33,6 +35,7 @@ export default function FinishScreen({
   onProgress: () => void
 }) {
 
+  const rev = useStorageRev()
   const summary = useMemo(() => {
     const doneEx = list.filter(e =>
       Array.from({ length: e.workSets }, (_, i) => isSetDone(profile, `${date}:${e.id}:work${i}`)).every(Boolean),
@@ -61,7 +64,7 @@ export default function FinishScreen({
     }).length
 
     return { doneEx: doneEx.length, setsDone, setsTotal, prs, ms: start ? end - start : 0, weekCount }
-  }, [profile, dia, list, date])
+  }, [profile, dia, list, date, rev])
 
   return (
     <div className="flex min-h-[55vh] flex-col items-center text-center">
@@ -102,6 +105,8 @@ export default function FinishScreen({
           Sin récords hoy, y sumaste 1 día más a tu semana ({summary.weekCount}/5). La constancia es la progresión.
         </p>
       )}
+
+      {profile === 'yo' && <CardioExtra />}
 
       <button onClick={onHome} className="mt-4 w-full rounded-2xl bg-[#B2EE37] py-4 text-base font-black uppercase text-black">
         Volver al inicio

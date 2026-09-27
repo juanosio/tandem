@@ -1,4 +1,6 @@
-// Persistencia Fase 1: localStorage por perfil (Yo / Novia). En Fase 2 se sincroniza con Supabase.
+// Local primero. Si hay Supabase, cada cambio entra a la cola y se sube al tener internet.
+import { clearMeta, clearOutbox, enqueue, setMeta, type SyncOp } from './outbox'
+
 export type Profile = 'yo' | 'novia'
 
 export const PROFILE_LABEL: Record<Profile, string> = {
@@ -14,8 +16,22 @@ const K_REST = 'gymapp.restSecs.v2'
 const K_GAP = 'gymapp.restGap.v1' // segundos extra al cambiar de ejercicio
 const K_WEEK = 'gymapp.week.v2' // semana de entrenamiento actual
 const K_SESSIONS = 'gymapp.sessions.v2' // sesiones: cada rutina iniciada guarda su tiempo
+const K_SWAP = 'gymapp.swap.v1' // ejercicio principal elegido por perfil
+const K_CARDIO = 'gymapp.cardioPref.v1' // máquina y minutos del cardio extra de Juan
 
 export interface HistEntry { profile: Profile; exerciseId: string; date: string; peso: number }
+
+let rev = 0
+const listeners = new Set<() => void>()
+export function storageRev(): number { return rev }
+export function subscribeStorage(fn: () => void) {
+  listeners.add(fn)
+  return () => listeners.delete(fn)
+}
+export function notifyStorage() {
+  rev += 1
+  listeners.forEach(fn => fn())
+}
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -23,30 +39,34 @@ function read<T>(key: string, fallback: T): T {
     return raw ? (JSON.parse(raw) as T) : fallback
   } catch { return fallback }
 }
-function write(key: string, val: unknown) {
+function write(key: string, val: unknown, silent = false) {
   try { localStorage.setItem(key, JSON.stringify(val)) } catch { /* sin espacio */ }
+  if (!silent) notifyStorage()
 }
+
+function stamp(): string { return new Date().toISOString() }
 
 export function getPeso(profile: Profile, exerciseId: string): number | '' {
   const all = read<Record<string, Record<string, number>>>(K_WEIGHTS, {})
   return all[profile]?.[exerciseId] ?? ''
 }
 export function setPeso(profile: Profile, exerciseId: string, peso: number, dateStr?: string) {
+  if (!Number.isFinite(peso) || peso <= 0) return
   const all = read<Record<string, Record<string, number>>>(K_WEIGHTS, {})
   all[profile] = all[profile] ?? {}
   all[profile][exerciseId] = peso
-  write(K_WEIGHTS, all)
-  // historial para progresión semana a semana
-  const hist = read<HistEntry[]>(K_HIST, [])
+  write(K_WEIGHTS, all, true)
   const today = dateStr ?? todayStr()
-  const last = [...hist].reverse().find(h => h.profile === profile && h.exerciseId === exerciseId)
-  if (!last || last.peso !== peso || last.date !== today) {
-    hist.push({ profile, exerciseId, date: today, peso })
-    write(K_HIST, hist.slice(-2000))
-  }
+  const hist = read<HistEntry[]>(K_HIST, []).filter(h => !(h.profile === profile && h.exerciseId === exerciseId && h.date === today))
+  hist.push({ profile, exerciseId, date: today, peso })
+  write(K_HIST, hist.slice(-2000), true)
+  const at = stamp()
+  enqueue({ id: `weight:${profile}:${exerciseId}`, at, kind: 'weight', profile, exerciseId, peso })
+  enqueue({ id: `hist:${profile}:${exerciseId}:${today}`, at, kind: 'hist', profile, exerciseId, date: today, peso })
+  notifyStorage()
 }
 export function getHistory(profile: Profile, exerciseId: string): HistEntry[] {
-  return read<HistEntry[]>(K_HIST, []).filter(h => h.profile === profile && h.exerciseId === exerciseId).slice(-8)
+  return read<HistEntry[]>(K_HIST, []).filter(h => h.profile === profile && h.exerciseId === exerciseId).slice(-16)
 }
 
 export function isSetDone(profile: Profile, key: string): boolean {
@@ -56,7 +76,9 @@ export function toggleSetDone(profile: Profile, key: string) {
   const all = read<Record<string, Record<string, boolean>>>(K_DONE, {})
   all[profile] = all[profile] ?? {}
   all[profile][key] = !all[profile][key]
-  write(K_DONE, all)
+  write(K_DONE, all, true)
+  enqueue({ id: `check:${profile}:${key}`, at: stamp(), kind: 'check', profile, key, done: !!all[profile][key] })
+  notifyStorage()
 }
 export function todayStr(): string {
   // Fecha LOCAL (no UTC): así coincide con las píldoras y el calendario del tlf.
@@ -74,7 +96,11 @@ export function getRestGap(): number {
   const v = read<number>(K_GAP, 60)
   return typeof v === 'number' && v >= 0 ? v : 60
 }
-export function setRestGap(secs: number) { write(K_GAP, secs) }
+export function setRestGap(secs: number) {
+  write(K_GAP, secs, true)
+  enqueue({ id: 'gap', at: stamp(), kind: 'gap', secs })
+  notifyStorage()
+}
 
 type WeekStore = Partial<Record<Profile, number>>
 
@@ -98,16 +124,85 @@ export function setWeek(profile: Profile, w: number) {
     ? { yo: raw.yo ?? legacy, novia: raw.novia ?? legacy }
     : { yo: legacy, novia: legacy }
   next[profile] = w
-  write(K_WEEK, next)
+  write(K_WEEK, next, true)
+  enqueue({ id: `week:${profile}`, at: stamp(), kind: 'week', profile, week: w })
+  notifyStorage()
 }
+
+const BACKUP_KEYS = [K_WEIGHTS, K_DONE, K_HIST, K_SESSIONS, K_REST, K_GAP, K_WEEK, K_SWAP, K_CARDIO]
 
 export function clearAll() {
   try {
-    for (const k of [K_WEIGHTS, K_DONE, K_HIST, K_SESSIONS, K_REST, K_GAP, K_WEEK,
+    for (const k of [...BACKUP_KEYS,
       'gymapp.weights.v1', 'gymapp.done.v1', 'gymapp.history.v1',
       'gymapp.sessions.v1', 'gymapp.restSecs.v1', 'gymapp.week.v1',
       'gymapp.workoutStart.v1', 'gymapp.workoutEnd.v1']) localStorage.removeItem(k)
   } catch { /* noop */ }
+  clearOutbox()
+  clearMeta()
+  notifyStorage()
+}
+
+export function exportBackup(): string {
+  const data: Record<string, unknown> = {}
+  for (const k of BACKUP_KEYS) {
+    try {
+      const raw = localStorage.getItem(k)
+      if (raw) data[k] = JSON.parse(raw)
+    } catch { /* clave dañada: se omite de la copia */ }
+  }
+  return JSON.stringify({ app: 'tandem', v: 1, at: new Date().toISOString(), data })
+}
+
+export function importBackup(raw: string): boolean {
+  const parsed = JSON.parse(raw) as { app?: string; data?: Record<string, unknown> }
+  if (parsed?.app !== 'tandem' || !parsed.data || typeof parsed.data !== 'object') return false
+  for (const k of BACKUP_KEYS) {
+    if (k in parsed.data && parsed.data[k] != null) write(k, parsed.data[k], true)
+  }
+  const at = stamp()
+  for (const op of snapshotLocal()) enqueue({ ...op, at })
+  notifyStorage()
+  return true
+}
+
+type SwapStore = Partial<Record<Profile, Record<string, string>>>
+
+export function getPrincipal(profile: Profile, slotKey: string): string | null {
+  return read<SwapStore>(K_SWAP, {})[profile]?.[slotKey] ?? null
+}
+
+export function setPrincipal(profile: Profile, slotKey: string, chosenKey: string) {
+  const all = read<SwapStore>(K_SWAP, {})
+  const mine = { ...(all[profile] ?? {}) }
+  if (chosenKey === slotKey) delete mine[slotKey]
+  else mine[slotKey] = chosenKey
+  all[profile] = mine
+  write(K_SWAP, all, true)
+  const at = stamp()
+  enqueue({
+    id: `swap:${profile}:${slotKey}`,
+    at,
+    kind: 'swap',
+    profile,
+    slot: slotKey,
+    chosen: chosenKey === slotKey ? null : chosenKey,
+  })
+  notifyStorage()
+}
+
+export interface CardioPref { machine: string; mins: number }
+
+export function getCardioPref(): CardioPref {
+  const v = read<CardioPref>(K_CARDIO, { machine: 'Caminadora', mins: 15 })
+  const mins = [10, 15, 20, 30].includes(v?.mins) ? v.mins : 15
+  return { machine: v?.machine || 'Caminadora', mins }
+}
+
+export function setCardioPref(pref: CardioPref) {
+  write(K_CARDIO, pref, true)
+  enqueue({ id: 'cardio', at: stamp(), kind: 'cardio', machine: pref.machine, mins: pref.mins })
+  notifyStorage()
 }
 
 // ---- Sesiones ----
@@ -130,7 +225,14 @@ export function startSession(profile: Profile, date: string, dia: string, totalE
   const all = read<Session[]>(K_SESSIONS, [])
   const s: Session = { id: `${Date.now()}`, profile, date, dia, startTs: Date.now(), endTs: null, doneEx: 0, totalEx }
   all.push(s)
-  write(K_SESSIONS, all.slice(-500))
+  write(K_SESSIONS, all.slice(-500), true)
+  enqueue({
+    id: `session:${s.id}`,
+    at: stamp(),
+    kind: 'session',
+    session: s,
+  })
+  notifyStorage()
   return s
 }
 export function endSession(profile: Profile, date: string, doneEx: number, totalEx: number): Session | null {
@@ -140,7 +242,9 @@ export function endSession(profile: Profile, date: string, doneEx: number, total
   s.endTs = Date.now()
   s.doneEx = doneEx
   s.totalEx = totalEx
-  write(K_SESSIONS, all)
+  write(K_SESSIONS, all, true)
+  enqueue({ id: `session:${s.id}`, at: stamp(), kind: 'session', session: { ...s } })
+  notifyStorage()
   return s
 }
 // Última sesión del día (abierta o cerrada): para mostrar el cronómetro / congelarlo.
@@ -189,4 +293,99 @@ export function getTrainedDates(profile: Profile): string[] {
 // Puntito verde: rutina terminada o, si no llegaste a Terminar, al menos una serie de trabajo.
 export function getMarkedDates(profile: Profile): string[] {
   return [...new Set([...getFinishedDates(profile), ...getTrainedDates(profile)])].sort()
+}
+
+function isProfile(v: unknown): v is Profile {
+  return v === 'yo' || v === 'novia'
+}
+
+export function snapshotLocal(): SyncOp[] {
+  const ops: SyncOp[] = []
+  const weights = read<Record<string, Record<string, number>>>(K_WEIGHTS, {})
+  for (const profile of ['yo', 'novia'] as const) {
+    for (const [exerciseId, peso] of Object.entries(weights[profile] ?? {})) {
+      if (peso > 0) ops.push({ id: `weight:${profile}:${exerciseId}`, at: '', kind: 'weight', profile, exerciseId, peso })
+    }
+  }
+  for (const h of read<HistEntry[]>(K_HIST, [])) {
+    ops.push({ id: `hist:${h.profile}:${h.exerciseId}:${h.date}`, at: '', kind: 'hist', profile: h.profile, exerciseId: h.exerciseId, date: h.date, peso: h.peso })
+  }
+  const done = read<Record<string, Record<string, boolean>>>(K_DONE, {})
+  for (const profile of ['yo', 'novia'] as const) {
+    for (const [key, value] of Object.entries(done[profile] ?? {})) {
+      ops.push({ id: `check:${profile}:${key}`, at: '', kind: 'check', profile, key, done: !!value })
+    }
+  }
+  for (const s of read<Session[]>(K_SESSIONS, [])) {
+    ops.push({ id: `session:${s.id}`, at: '', kind: 'session', session: s })
+  }
+  const rawWeek = localStorage.getItem(K_WEEK)
+  if (rawWeek) {
+    const store = readWeekStore()
+    const asObj: Partial<Record<Profile, number>> = typeof store === 'number'
+      ? { yo: store, novia: store }
+      : store
+    for (const profile of ['yo', 'novia'] as const) {
+      const week = asObj[profile]
+      if (typeof week === 'number' && week >= 1) ops.push({ id: `week:${profile}`, at: '', kind: 'week', profile, week })
+    }
+  }
+  const swaps = read<Partial<Record<Profile, Record<string, string>>>>(K_SWAP, {})
+  for (const profile of ['yo', 'novia'] as const) {
+    for (const [slot, chosen] of Object.entries(swaps[profile] ?? {})) {
+      if (chosen) ops.push({ id: `swap:${profile}:${slot}`, at: '', kind: 'swap', profile, slot, chosen })
+    }
+  }
+  if (localStorage.getItem(K_GAP)) {
+    ops.push({ id: 'gap', at: '', kind: 'gap', secs: getRestGap() })
+  }
+  if (localStorage.getItem(K_CARDIO)) {
+    const pref = getCardioPref()
+    ops.push({ id: 'cardio', at: '', kind: 'cardio', machine: pref.machine, mins: pref.mins })
+  }
+  return ops
+}
+
+export function ingestRemote(op: SyncOp) {
+  if (op.kind === 'weight' && isProfile(op.profile) && op.exerciseId && typeof op.peso === 'number') {
+    const all = read<Record<string, Record<string, number>>>(K_WEIGHTS, {})
+    all[op.profile] = all[op.profile] ?? {}
+    all[op.profile][op.exerciseId] = op.peso
+    write(K_WEIGHTS, all, true)
+  } else if (op.kind === 'hist' && isProfile(op.profile) && op.exerciseId && op.date && typeof op.peso === 'number') {
+    const hist = read<HistEntry[]>(K_HIST, []).filter(h => !(h.profile === op.profile && h.exerciseId === op.exerciseId && h.date === op.date))
+    hist.push({ profile: op.profile, exerciseId: op.exerciseId, date: op.date, peso: op.peso })
+    write(K_HIST, hist.slice(-2000), true)
+  } else if (op.kind === 'check' && isProfile(op.profile) && op.key) {
+    const all = read<Record<string, Record<string, boolean>>>(K_DONE, {})
+    all[op.profile] = all[op.profile] ?? {}
+    all[op.profile][op.key] = !!op.done
+    write(K_DONE, all, true)
+  } else if (op.kind === 'session' && op.session) {
+    const all = read<Session[]>(K_SESSIONS, []).filter(s => s.id !== op.session!.id)
+    all.push(op.session)
+    write(K_SESSIONS, all.slice(-500), true)
+  } else if (op.kind === 'week' && isProfile(op.profile) && typeof op.week === 'number') {
+    const raw = readWeekStore()
+    const legacy = typeof raw === 'number' ? (raw || 1) : 1
+    const next: WeekStore = typeof raw === 'object' && raw
+      ? { yo: raw.yo ?? legacy, novia: raw.novia ?? legacy }
+      : { yo: legacy, novia: legacy }
+    next[op.profile] = op.week
+    write(K_WEEK, next, true)
+  } else if (op.kind === 'swap' && isProfile(op.profile) && op.slot) {
+    const all = read<Partial<Record<Profile, Record<string, string>>>>(K_SWAP, {})
+    const mine = { ...(all[op.profile] ?? {}) }
+    if (!op.chosen) delete mine[op.slot]
+    else mine[op.slot] = op.chosen
+    all[op.profile] = mine
+    write(K_SWAP, all, true)
+  } else if (op.kind === 'gap' && typeof op.secs === 'number') {
+    write(K_GAP, op.secs, true)
+  } else if (op.kind === 'cardio' && op.machine && typeof op.mins === 'number') {
+    write(K_CARDIO, { machine: op.machine, mins: op.mins }, true)
+  } else {
+    return
+  }
+  setMeta(op.id, op.at)
 }
