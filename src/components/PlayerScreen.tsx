@@ -90,8 +90,9 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
             <span className="rounded-full bg-[#1f2227] px-3 py-1 text-[11px] font-black text-[#FCFCFC]">⏱ Descanso {ex.descanso}</span>
           )}
           {ex.rpe && (() => {
-            const n = Number((ex.rpe as string).replace(/[^0-9]/g, ''))
-            const rir = !isNaN(n) && n >= 1 && n <= 10 ? ` · te sobran ~${10 - n}` : ''
+            const m = (ex.rpe as string).match(/\d+/)
+            const n = m ? Number(m[0]) : NaN
+            const rir = isNaN(n) ? '' : n >= 10 ? ' · al fallo' : ` · te sobran ~${10 - n}`
             return (
               <button onClick={() => setShowRpe(s => !s)}
                 className="rounded-full bg-[#B2EE37]/15 px-3 py-1 text-[11px] font-black text-[#B2EE37]">
