@@ -4,7 +4,7 @@ import { RUTINA } from './rutina'
 // Modelo por semanas: la intensidad/cambios van por semana.
 // Semana 1 Lunes = datos ricos del usuario (ES+EN, videos, descanso, RPE).
 // Resto de días/semanas: fallback a la tabla base hasta que los definamos.
-export const SEMANAS_DISPONIBLES = [1, 2, 3, 4, 5, 6, 7]
+export const SEMANAS_DISPONIBLES = [1, 2, 3, 4, 5, 6, 7, 8]
 
 const S1_LUNES: Exercise[] = [
   {
@@ -178,6 +178,11 @@ export function getDayExercises(semana: number, dia: string): Exercise[] {
   if (semana === 7 && dia === 'Miércoles') return S7_MIERCOLES
   if (semana === 7 && dia === 'Jueves') return S7_JUEVES
   if (semana === 7 && dia === 'Viernes') return S7_VIERNES
+  if (semana === 8 && dia === 'Lunes') return S8_LUNES
+  if (semana === 8 && dia === 'Martes') return S8_MARTES
+  if (semana === 8 && dia === 'Miércoles') return S8_MIERCOLES
+  if (semana === 8 && dia === 'Jueves') return S8_JUEVES
+  if (semana === 8 && dia === 'Viernes') return S8_VIERNES
   return RUTINA.filter(e => e.dia === dia).sort((a, b) => a.orden - b.orden)
 }
 
@@ -1125,14 +1130,14 @@ const S6_VIERNES: Exercise[] = [
 
 // Semana 7: mismas fichas de S6, 2-3 working sets, Early RPE con rangos y Last RPE hasta 10.
 interface S7Cfg { cs: string; cd: CalentSet[]; ws: number; reps: string; early: string; last: string; rest: string; fail?: boolean }
-const S7B = (base: Exercise[], p: string, cfg: S7Cfg[]): Exercise[] =>
+const S7B = (base: Exercise[], p: string, cfg: S7Cfg[], sem = 7): Exercise[] =>
   base.map((e, i) => ({
     ...e,
-    id: `s7-${p}-${i + 1}`,
+    id: `s${sem}-${p}-${i + 1}`,
     calentSets: cfg[i].cs, calentDetalle: cfg[i].cd,
     workSets: cfg[i].ws, workReps: cfg[i].reps,
     earlyRpe: cfg[i].early, rpe: cfg[i].last, descanso: cfg[i].rest,
-    ...(cfg[i].fail ? { lastSetTech: 'Failure' } : {}),
+    lastSetTech: cfg[i].fail ? 'Failure' : undefined,
   }));
 
 const S7_LUNES = S7B(S6_LUNES, 'lun', [
@@ -1172,6 +1177,55 @@ const S7_JUEVES = S7B(S6_JUEVES, 'jue', [
 ])
 
 const S7_VIERNES = S7B(S6_VIERNES, 'vie', [
+  { cs: '2 a 4', cd: C4, ws: 3, reps: '10-12', early: '~7-8', last: '~7-8', rest: '3-5 min' },
+  { cs: '2 a 3', cd: C3, ws: 2, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1', cd: C1, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1', cd: C1, ws: 3, reps: '12-15', early: '~7-8', last: '~8-9', rest: '1-2 min' },
+  { cs: '1', cd: C1, ws: 2, reps: '15-20', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+])
+
+// Semana 8: misma base S7, nueva intensidad y fallos (sin Early en S6-base: se hereda igual).
+const S8 = (base: Exercise[], p: string, cfg: S7Cfg[]): Exercise[] => S7B(base, p, cfg, 8);
+
+const S8_LUNES = S8(S7_LUNES, 'lun', [
+  { cs: '2 a 3', cd: C3, ws: 3, reps: '8-10', early: '~7-8', last: '~7-8', rest: '3-5 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '10-12', early: '~7-8', last: '~8-9', rest: '1-2 min' },
+  { cs: '1 a 2', cd: C2, ws: 3, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '8-10', early: '~7-8', last: '~7-8', rest: '2-3 min' },
+  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+])
+
+const S8_MARTES = S8(S7_MARTES, 'mar', [
+  { cs: '2', cd: C2, ws: 2, reps: '10-12', early: '~7-8', last: '~8-9', rest: '1-2 min' },
+  { cs: '2 a 4', cd: C4, ws: 3, reps: '8-10', early: '~7-8', last: '~7-8', rest: '3-5 min' },
+  { cs: '2 a 4', cd: C4, ws: 3, reps: '8-10', early: '~7-8', last: '~7-8', rest: '2-3 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '8-10', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1', cd: C1, ws: 2, reps: '10-12', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+])
+
+const S8_MIERCOLES = S8(S7_MIERCOLES, 'mie', [
+  { cs: '2 a 3', cd: C3, ws: 2, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
+  { cs: '2 a 3', cd: C3, ws: 3, reps: '10-12', early: '~8-9', last: '10', rest: '2-3 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '2 a 3', cd: C3, ws: 2, reps: '12-15', early: '~7', last: '~8-9', rest: '1-2 min' },
+  { cs: '1', cd: C1, ws: 3, reps: '12-15', early: '~7', last: '~8-9', rest: '1-2 min' },
+  { cs: '1', cd: C1, ws: 2, reps: '15-20', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+])
+
+const S8_JUEVES = S8(S7_JUEVES, 'jue', [
+  { cs: '2 a 4', cd: C4, ws: 3, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '2 a 3', cd: C3, ws: 2, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
+  { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+  { cs: '1 a 2', cd: C2, ws: 3, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
+])
+
+const S8_VIERNES = S8(S7_VIERNES, 'vie', [
   { cs: '2 a 4', cd: C4, ws: 3, reps: '10-12', early: '~7-8', last: '~7-8', rest: '3-5 min' },
   { cs: '2 a 3', cd: C3, ws: 2, reps: '10-12', early: '~7-8', last: '~7-8', rest: '2-3 min' },
   { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
