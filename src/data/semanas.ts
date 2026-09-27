@@ -1,4 +1,6 @@
 import type { CalentSet, Exercise } from '../types'
+import type { Profile } from '../lib/storage'
+import { getNoviaDayExercises } from './semanasNovia'
 import { RUTINA } from './rutina'
 
 // Modelo por semanas: la intensidad/cambios van por semana.
@@ -142,7 +144,7 @@ const S1_LUNES: Exercise[] = [
   },
 ]
 
-export function getDayExercises(semana: number, dia: string): Exercise[] {
+export function getYoDayExercises(semana: number, dia: string): Exercise[] {
   if (semana === 1 && dia === 'Lunes') return S1_LUNES
   if (semana === 1 && dia === 'Martes') return S1_MARTES
   if (semana === 1 && dia === 'Miércoles') return S1_MIERCOLES
@@ -204,6 +206,11 @@ export function getDayExercises(semana: number, dia: string): Exercise[] {
   if (semana === 12 && dia === 'Jueves') return S12_JUEVES
   if (semana === 12 && dia === 'Viernes') return S12_VIERNES
   return RUTINA.filter(e => e.dia === dia).sort((a, b) => a.orden - b.orden)
+}
+
+export function getDayExercises(semana: number, dia: string, profile: Profile = 'yo'): Exercise[] {
+  if (profile === 'novia') return getNoviaDayExercises(semana, dia)
+  return getYoDayExercises(semana, dia)
 }
 
 // Intensidad de una semana sobre una ficha base (misma técnica/videos/GIF,
