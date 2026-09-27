@@ -71,7 +71,7 @@ const S1_LUNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=MnMux3Wc0Ac',
     alternativas: 'Elevación lateral en polea alta con brazalete o Elevación lateral inclinada con mancuerna',
     alts: [
-      { es: 'Elevación lateral en polea alta con brazalete', en: 'High Cable Cuffed Lateral Raise', video: 'https://www.youtube.com/watch?v=8m2jNHBP580' },
+      { es: 'Elevación lateral en polea alta con brazalete', en: 'High Cable Cuffed Lateral Raise', video: 'https://www.youtube.com/watch?v=8m2jNHBP580', mediaKey: 'high-cable-cuffed-lateral-raise' },
       { es: 'Elevación lateral inclinada con mancuerna', en: 'Lean-In DB Lateral Raise', video: 'https://www.youtube.com/watch?v=BmYuAG2j2co', mediaKey: 'lean-in-db-lateral-raise' },
     ],
     descanso: '1-2 min',
@@ -269,7 +269,7 @@ const S1_VIERNES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=MnMux3Wc0Ac',
     alternativas: 'Elevación lateral en polea alta con brazalete o Elevación lateral inclinada con mancuerna',
     alts: [
-      { es: 'Elevación lateral en polea alta con brazalete', en: 'High Cable Cuffed Lateral Raise', video: 'https://www.youtube.com/watch?v=8m2jNHBP580' },
+      { es: 'Elevación lateral en polea alta con brazalete', en: 'High Cable Cuffed Lateral Raise', video: 'https://www.youtube.com/watch?v=8m2jNHBP580', mediaKey: 'high-cable-cuffed-lateral-raise' },
       { es: 'Elevación lateral inclinada con mancuerna', en: 'Lean-In DB Lateral Raise', video: 'https://www.youtube.com/watch?v=BmYuAG2j2co', mediaKey: 'lean-in-db-lateral-raise' },
     ],
     descanso: '1-2 min',
@@ -327,7 +327,7 @@ const S1_VIERNES: Exercise[] = [
     alternativas: 'Elevación de piernas colgado o Vela modificada',
     alts: [
       { es: 'Elevación de piernas colgado', en: 'Hanging Leg Raise', video: 'https://www.youtube.com/watch?v=rGqwkinWqYI', mediaKey: 'hanging-leg-raise' },
-      { es: 'Vela modificada', en: 'Modified Candlestick', video: 'https://www.youtube.com/watch?v=-XVRl8KU7x0' },
+      { es: 'Vela modificada', en: 'Modified Candlestick', video: 'https://www.youtube.com/watch?v=-XVRl8KU7x0', mediaKey: 'modified-candlestick' },
     ],
     descanso: '1-2 min',
     rpe: '~7',
@@ -348,7 +348,7 @@ const S1_JUEVES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=1yKAQLVV_XI',
     alternativas: 'Zancada en máquina Smith o Zancadas caminando con mancuernas',
     alts: [
-      { es: 'Zancada en máquina Smith', en: 'Smith Machine Lunge', video: 'https://www.youtube.com/watch?v=SEjKxJGg_C8' },
+      { es: 'Zancada en máquina Smith', en: 'Smith Machine Lunge', video: 'https://www.youtube.com/watch?v=SEjKxJGg_C8', mediaKey: 'smith-machine-lunge' },
       { es: 'Zancadas caminando con mancuernas', en: 'DB Walking Lunge', video: 'https://www.youtube.com/watch?v=BC_eDtrB-M4', mediaKey: 'db-walking-lunge' },
     ],
     descanso: '2-3 min',
@@ -620,7 +620,7 @@ const S1_MARTES: Exercise[] = [
     video: 'https://www.youtube.com/watch?v=uFbNtqP966A',
     alternativas: 'Nórdico inverso o Sentadilla sissy',
     alts: [
-      { es: 'Nórdico inverso', en: 'Reverse Nordic', video: 'https://www.youtube.com/watch?v=D-kqUKEQZZ0' },
+      { es: 'Nórdico inverso', en: 'Reverse Nordic', video: 'https://www.youtube.com/watch?v=D-kqUKEQZZ0', mediaKey: 'reverse-nordic' },
       { es: 'Sentadilla sissy', en: 'Sissy Squat', video: 'https://www.youtube.com/watch?v=eWAjlO4FWPQ', mediaKey: 'sissy-squat' },
     ],
     descanso: '1-2 min',

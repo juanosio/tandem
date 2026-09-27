@@ -25,6 +25,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,json,svg,png,jpg,jpeg,webp,gif,mp4}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // GIFs de hasta 5MB offline
       },
     }),
   ],
