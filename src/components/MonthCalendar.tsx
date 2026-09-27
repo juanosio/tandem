@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 // Calendario mensual: marca los días que fuiste a entrenar (punto lima).
 // Lunes como primer día de la semana.
@@ -20,9 +21,13 @@ export default function MonthCalendar({ trained }: { trained: Set<string> }) {
   return (
     <div className="rounded-3xl bg-[#17191d]/90 p-4">
       <div className="mb-2 flex items-center justify-between">
-        <button onClick={() => setYm(v => ({ y: v.m === 0 ? v.y - 1 : v.y, m: (v.m + 11) % 12 }))} className="h-9 w-9 rounded-xl bg-[#1f2227] font-black">‹</button>
-        <p className="text-sm font-black">{MESES[ym.m]} {ym.y}</p>
-        <button onClick={() => setYm(v => ({ y: v.m === 11 ? v.y + 1 : v.y, m: (v.m + 1) % 12 }))} className="h-9 w-9 rounded-xl bg-[#1f2227] font-black">›</button>
+        <button onClick={() => setYm(v => ({ y: v.m === 0 ? v.y - 1 : v.y, m: (v.m + 11) % 12 }))} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1f2227]" aria-label="Mes anterior">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <p className="font-display text-base font-semibold">{MESES[ym.m]} {ym.y}</p>
+        <button onClick={() => setYm(v => ({ y: v.m === 11 ? v.y + 1 : v.y, m: (v.m + 1) % 12 }))} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1f2227]" aria-label="Mes siguiente">
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center">
         {DOW.map((d, i) => <span key={i} className="py-1 text-[10px] font-bold text-[#7C7C74]">{d}</span>)}
@@ -32,14 +37,14 @@ export default function MonthCalendar({ trained }: { trained: Set<string> }) {
           const was = trained.has(str)
           const isToday = str === today
           return (
-            <span key={i} className={`flex flex-col items-center rounded-xl py-1.5 text-xs font-bold ${isToday ? 'bg-[#B2EE37] text-black' : was ? 'text-[#FCFCFC]' : 'text-[#7C7C74]'}`}>
-              {day}
-              <span className={`mt-0.5 h-1 w-1 rounded-full ${was ? (isToday ? 'bg-black' : 'bg-[#B2EE37]') : 'bg-transparent'}`} />
+            <span key={i} className={`flex flex-col items-center rounded-xl py-1.5 text-xs font-bold ${isToday ? 'bg-[#B2EE37] text-black' : was ? 'bg-[#B2EE37]/15 text-[#FCFCFC]' : 'text-[#7C7C74]'}`}>
+              <span className="font-display text-sm font-semibold">{day}</span>
+              <span className={`mt-0.5 h-2 w-2 rounded-full ${was ? (isToday ? 'bg-black' : 'bg-[#55F670]') : 'bg-transparent'}`} />
             </span>
           )
         })}
       </div>
-      <p className="mt-2 text-center text-[11px] text-[#7C7C74]">● días que entrenaste</p>
+      <p className="mt-2 text-center text-[11px] text-[#7C7C74]">El punto verde marca los días que entrenaste</p>
     </div>
   )
 }

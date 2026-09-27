@@ -1,3 +1,4 @@
+import { AlertTriangle } from 'lucide-react'
 import type { Exercise } from '../types'
 import { EXERCISE_MEDIA } from '../data/media'
 import Placeholder from './Placeholder'
@@ -29,7 +30,7 @@ export default function ExerciseMedia({ ex, big = false }: { ex: Exercise; big?:
         />
         {lib.approx && (
           <p className="mx-auto mt-2 w-fit rounded-full bg-amber-400/15 px-3 py-1 text-[11px] font-black text-amber-300">
-            ⚠ GIF referencial — mira el video ▶
+            <AlertTriangle className="mr-1 inline h-3 w-3" /> GIF referencial — mira el video
           </p>
         )}
       </div>

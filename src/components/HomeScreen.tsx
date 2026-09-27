@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, ChevronRight, Dumbbell, Play, Sparkles, Timer, Trophy } from 'lucide-react'
 import { getDayExercises } from '../data/semanas'
-import { fmtMin, getAvgMs, getFinishedDates, isSetDone, todayStr, type Profile } from '../lib/storage'
+import { fmtMin, getAvgMs, getMarkedDates, isSetDone, PROFILE_LABEL, todayStr, type Profile } from '../lib/storage'
 
 interface Props {
   profile: Profile
@@ -27,38 +28,53 @@ function mondayOfWeek(base: Date): Date {
 
 function saludo(): string {
   const h = new Date().getHours()
-  if (h < 12) return '¡Buenos días!'
-  if (h < 20) return '¡Buenas tardes!'
-  return '¡Buenas noches!'
+  if (h < 12) return 'Buenos días'
+  if (h < 20) return 'Buenas tardes'
+  return 'Buenas noches'
 }
 
-// Dashboard estilo referencia: saludo, meta semanal con píldoras Lun-Dom,
-// tarjeta de la rutina, empezar/continuar, focos musculares y calendario.
+function buildStrip(back = 14, forward = 21) {
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  start.setDate(start.getDate() - back)
+  return Array.from({ length: back + forward + 1 }, (_, i) => {
+    const d = new Date(start)
+    d.setDate(start.getDate() + i)
+    const wd = (d.getDay() + 6) % 7
+    return { str: toStr(d), num: d.getDate(), wd }
+  })
+}
+
+// Franja de fechas con hoy al centro: atrás lo que ya pasó, adelante lo que toca.
 export default function HomeScreen({ profile, dia, setDia, onStart, semana, setSemana, semanas }: Props) {
   const today = todayStr()
   const [selDate, setSelDate] = useState(today)
+  const stripRef = useRef<HTMLDivElement>(null)
 
-  const week = useMemo(() => {
+  const strip = useMemo(() => buildStrip(), [])
+  const thisWeek = useMemo(() => {
     const mon = mondayOfWeek(new Date())
     return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(mon); d.setDate(d.getDate() + i)
-      return { str: toStr(d), num: d.getDate(), wd: i }
+      const d = new Date(mon)
+      d.setDate(d.getDate() + i)
+      return toStr(d)
     })
   }, [])
 
-  const trained = useMemo(() => new Set(getFinishedDates(profile)), [profile])
-  const weekTrained = week.filter(w => trained.has(w.str)).length
+  const trained = useMemo(() => new Set(getMarkedDates(profile)), [profile])
+  const weekTrained = thisWeek.filter(s => trained.has(s)).length
   const goal = 5 // Lun-Vie
 
-  const selWd = week.find(w => w.str === selDate)?.wd ?? ((new Date().getDay() + 6) % 7)
+  const sel = strip.find(w => w.str === selDate) ?? strip.find(w => w.str === today)!
+  const selWd = sel.wd
   const selRutinaDia = DIA_BY_WD[selWd]
   const isRest = selRutinaDia === ''
   const activeDia = isRest ? dia : selRutinaDia
+  const tone = selDate === today ? 'HOY TOCA' : selDate < today ? 'ASÍ FUE' : 'TE TOCA'
 
-  const list = getDayExercises(semana, activeDia).sort((a, b) => a.orden - b.orden)
+  const list = getDayExercises(semana, activeDia, profile).sort((a, b) => a.orden - b.orden)
   const workTotal = list.reduce((a, e) => a + e.workSets, 0)
   const calentTotal = list.reduce((a, e) => a + e.calentDetalle.length, 0)
-  // Estimado según tu promedio en este día de rutina (referencia, de tus sesiones pasadas).
   const avg = isRest ? null : getAvgMs(profile, activeDia)
   const dayKey = isRest ? today : selDate
   const doneCount = isRest ? 0 : list.filter(e =>
@@ -73,70 +89,95 @@ export default function HomeScreen({ profile, dia, setDia, onStart, semana, setS
     if (DIA_BY_WD[w.wd] !== '') setDia(DIA_BY_WD[w.wd])
   }
 
+  useEffect(() => {
+    const parent = stripRef.current
+    const el = parent?.querySelector<HTMLElement>('[data-today]')
+    if (!el || !parent) return
+    parent.scrollLeft = el.offsetLeft - parent.clientWidth / 2 + el.offsetWidth / 2
+  }, [])
+
+  useEffect(() => {
+    const el = document.getElementById(`sem-${semana}`)
+    const parent = el?.parentElement
+    if (!el || !parent) return
+    parent.scrollTo({ left: el.offsetLeft - parent.clientWidth / 2 + el.offsetWidth / 2 })
+  }, [semana])
+
   return (
     <div>
-      {/* Saludo */}
       <div className="mb-3 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#B2EE37] text-xl font-black text-black">
-          {profile === 'yo' ? '💪' : '🔥'}
+        <div className="font-display flex h-11 w-11 items-center justify-center rounded-full bg-[#B2EE37] text-lg font-semibold text-black">
+          {profile === 'yo' ? 'J' : 'M'}
         </div>
         <div className="flex-1">
-          <p className="text-[11px] text-[#7C7C74]">{saludo()}</p>
-          <p className="text-lg font-black leading-tight">{profile === 'yo' ? 'Mi rutina' : 'Rutina de ella'}</p>
+          <p className="text-sm text-[#7C7C74]">{saludo()}</p>
+          <p className="text-xl font-bold leading-tight">{PROFILE_LABEL[profile]}</p>
         </div>
-        <div className="rounded-2xl bg-[#B2EE37]/15 px-3 py-1.5 text-xs font-black text-[#B2EE37]">🏋️ GYM</div>
+        <div className="flex items-center gap-1.5 rounded-2xl bg-[#B2EE37]/15 px-3 py-1.5 text-xs font-bold text-[#B2EE37]">
+          <Dumbbell className="h-3.5 w-3.5" strokeWidth={2.5} />
+          GYM
+        </div>
       </div>
 
-      {/* Meta semanal */}
       <div className="mb-3 rounded-3xl bg-[#17191d]/90 p-4">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-black">Meta semanal</p>
-          <p className="text-sm font-black text-[#B2EE37]">{Math.min(weekTrained, goal)}/{goal} 🏋️</p>
+          <p className="text-base font-bold">Meta semanal</p>
+          <p className="font-display flex items-center gap-1 text-base font-semibold text-[#B2EE37]">
+            {Math.min(weekTrained, goal)}/{goal}
+            <Trophy className="h-4 w-4" strokeWidth={2.25} />
+          </p>
         </div>
-        <div className="grid grid-cols-7 gap-1.5">
-          {week.map(w => {
+        <div ref={stripRef} className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+          {strip.map(w => {
             const isSel = w.str === selDate
             const isToday = w.str === today
             const was = trained.has(w.str)
             return (
-              <button key={w.str} onClick={() => pickDay(w)}
-                className={`flex flex-col items-center rounded-2xl py-2 ${isSel ? 'bg-[#FCFCFC] text-black' : 'bg-[#1f2227] text-[#7C7C74]'}`}>
-                <span className="text-[10px] font-bold">{WD_SHORT[w.wd]}</span>
-                <span className={`text-sm font-black ${!isSel && isToday ? 'text-[#B2EE37]' : ''}`}>{w.num}</span>
-                {was && <span className={`mt-0.5 h-1.5 w-1.5 rounded-full ${isSel ? 'bg-black' : 'bg-[#55F670]'}`} />}
+              <button key={w.str} data-date={w.str} data-wd={w.wd} data-today={isToday ? '' : undefined} onClick={() => pickDay(w)}
+                className={`flex w-[3.25rem] shrink-0 flex-col items-center rounded-2xl py-2 ${isSel ? 'bg-[#FCFCFC] text-black' : 'bg-[#1f2227] text-[#7C7C74]'}`}>
+                <span className="text-[11px] font-bold">{WD_SHORT[w.wd]}</span>
+                <span className={`font-display text-lg font-semibold leading-none ${!isSel && isToday ? 'text-[#B2EE37]' : ''}`}>{w.num}</span>
+                <span className={`mt-1 h-1.5 w-1.5 rounded-full ${was ? (isSel ? 'bg-black' : 'bg-[#55F670]') : 'bg-transparent'}`} />
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Tarjeta motivación */}
-      <div className="mb-3 flex items-center justify-between gap-2 rounded-3xl bg-[#B2EE37]/10 p-4">
-        <p className="flex-1 text-sm font-bold leading-snug">Que hoy marque el inicio de tu increíble transformación 💪</p>
-        <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-[#1f2227] p-1">
-          <span className="pl-2 text-[10px] font-black uppercase text-[#7C7C74]">Sem</span>
+      <div className="mb-3 rounded-3xl bg-[#B2EE37]/10 p-4">
+        <p className="flex items-start gap-2 text-base font-bold leading-snug">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#B2EE37]" strokeWidth={2.25} />
+          Que hoy marque el inicio de tu increíble transformación
+        </p>
+        <p className="mb-2 mt-3 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Semana del plan</p>
+        <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
           {semanas.map(s => (
-            <button key={s} onClick={() => setSemana(s)}
-              className={`h-8 w-8 rounded-xl text-sm font-black ${semana === s ? 'bg-[#B2EE37] text-black' : 'text-[#7C7C74]'}`}>
+            <button key={s} id={`sem-${s}`} onClick={() => setSemana(s)}
+              className={`font-display h-11 w-11 shrink-0 rounded-2xl text-lg font-semibold ${semana === s ? 'bg-[#B2EE37] text-black' : 'bg-[#1f2227] text-[#7C7C74]'}`}>
               {s}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Rutina del día seleccionado */}
       <div className="mb-3 rounded-3xl bg-[#17191d]/90 p-4">
         <div className="mb-1 flex items-center justify-between">
-          <p className="text-[11px] font-black uppercase tracking-wider text-[#B2EE37]">
-            {isRest ? 'Descanso 😴' : `${activeDia} · ${doneCount}/${list.length}`}
+          <p className="text-xs font-bold uppercase tracking-wider text-[#B2EE37]">
+            {isRest ? 'Descanso' : `${activeDia} · ${doneCount}/${list.length}`}
           </p>
-          {!isRest && <span className="rounded-full bg-[#B2EE37] px-2.5 py-0.5 text-[10px] font-black text-black">S{semana} · HOY TOCA</span>}
+          {!isRest && <span className="rounded-full bg-[#B2EE37] px-2.5 py-1 text-xs font-bold text-black">S{semana} · {tone}</span>}
         </div>
-        <h2 className="text-xl font-black leading-tight">
+        <h2 className="text-2xl font-bold leading-tight">
           {isRest ? 'Día de descanso' : `Rutina ${activeDia}`}
         </h2>
-        {!isRest && <p className="mb-2 text-xs text-[#7C7C74]">
-          {list.length} ejercicios · {workTotal} sets de trabajo · {calentTotal} calentamiento{avg ? ` · ⏱ ${fmtMin(avg)}` : ''}
+        {!isRest && selDate !== today && (
+          <p className="mt-0.5 text-sm text-[#7C7C74]">
+            {selDate < today ? 'Lo que tocaba ese día, con la semana que tienes puesta.' : 'Lo que te va a tocar, con la semana que tienes puesta.'}
+          </p>
+        )}
+        {!isRest && <p className="mb-2 mt-1 flex items-center gap-1 text-sm text-[#7C7C74]">
+          {list.length} ejercicios · {workTotal} sets de trabajo · {calentTotal} calentamiento
+          {avg && <><Timer className="ml-1 h-3.5 w-3.5" strokeWidth={2.25} /> {fmtMin(avg)}</>}
         </p>}
 
         {!isRest && (
@@ -144,12 +185,12 @@ export default function HomeScreen({ profile, dia, setDia, onStart, semana, setS
             {list.map((e, i) => {
               const done = Array.from({ length: e.workSets }, (_, k) => isSetDone(profile, `${dayKey}:${e.id}:work${k}`)).every(Boolean)
               return (
-                <button key={e.id} onClick={() => onStart(i, dayKey)} className="flex w-full items-center gap-2 text-left">
-                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black ${done ? 'bg-[#55F670] text-black' : 'bg-[#23262c] text-[#7C7C74]'}`}>
-                    {done ? '✓' : i + 1}
+                <button key={e.id} onClick={() => onStart(i, dayKey)} className="flex min-h-11 w-full items-center gap-2.5 text-left">
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${done ? 'bg-[#55F670] text-black' : 'bg-[#23262c] text-[#7C7C74]'}`}>
+                    {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <span className="font-display">{i + 1}</span>}
                   </span>
-                  <p className={`truncate text-xs ${done ? 'text-[#55F670] line-through' : 'text-[#7C7C74]'}`}>
-                    {e.nombre} <span className="text-[#3a3d43]">· {e.workSets}x{e.workReps}</span>
+                  <p className={`truncate text-base font-semibold ${done ? 'text-[#55F670] line-through' : 'text-[#FCFCFC]'}`}>
+                    {e.nombre} <span className="font-bold text-[#7C7C74]">· {e.workSets}x{e.workReps}</span>
                   </p>
                 </button>
               )
@@ -158,13 +199,17 @@ export default function HomeScreen({ profile, dia, setDia, onStart, semana, setS
         )}
 
         {isRest ? (
-          <p className="rounded-2xl bg-[#1f2227] p-3 text-center text-xs text-[#7C7C74]">Recupera. Vuelve mañana a darle con todo 🔋</p>
+          <p className="rounded-2xl bg-[#1f2227] p-3 text-center text-sm text-[#7C7C74]">Recupera. Mañana se vuelve a entrenar.</p>
         ) : (
           <button
             onClick={() => onStart(firstPending === -1 ? 0 : firstPending, selDate)}
-            className="w-full rounded-2xl bg-[#B2EE37] py-4 text-base font-black uppercase text-black"
+            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#B2EE37] py-4 text-lg font-bold uppercase text-black"
           >
-            {selDate === today && doneCount === list.length ? 'Repasar rutina' : firstPending > 0 ? `Continuar ${firstPending + 1}/${list.length} ›` : '▶ Empezar'}
+            {doneCount === list.length && doneCount > 0
+              ? 'Repasar rutina'
+              : firstPending > 0
+                ? <>Continuar {firstPending + 1}/{list.length} <ChevronRight className="h-5 w-5" /></>
+                : <><Play className="h-5 w-5" fill="currentColor" /> Empezar</>}
           </button>
         )}
       </div>

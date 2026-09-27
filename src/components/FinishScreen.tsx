@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Flame, PartyPopper, Timer, TrendingUp } from 'lucide-react'
 import type { Exercise } from '../types'
 import {
   getFinishedDates,
@@ -64,28 +65,32 @@ export default function FinishScreen({
 
   return (
     <div className="flex min-h-[55vh] flex-col items-center text-center">
-      <p className="text-6xl">🎉</p>
-      <h2 className="mt-2 text-2xl font-black uppercase">Rutina completada</h2>
+      <PartyPopper className="h-14 w-14 text-[#B2EE37]" strokeWidth={1.75} />
+      <h2 className="mt-2 text-2xl font-bold uppercase">Rutina completada</h2>
       <p className="mt-1 text-sm text-[#7C7C74]">{dia} · {list.length} ejercicios · buen trabajo</p>
 
       <div className="mt-4 grid w-full grid-cols-3 gap-2">
         <div className="rounded-3xl bg-[#17191d] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#7C7C74]">⏱ Tiempo</p>
-          <p className="text-lg font-black tabular-nums text-[#B2EE37]">{fmtDur(summary.ms)}</p>
+          <p className="flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">
+            <Timer className="h-3.5 w-3.5" /> Tiempo
+          </p>
+          <p className="font-display text-lg font-semibold tabular-nums text-[#B2EE37]">{fmtDur(summary.ms)}</p>
         </div>
         <div className="rounded-3xl bg-[#17191d] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#7C7C74]">Ejercicios</p>
-          <p className="text-lg font-black">{summary.doneEx}/{list.length}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Ejercicios</p>
+          <p className="font-display text-lg font-semibold">{summary.doneEx}/{list.length}</p>
         </div>
         <div className="rounded-3xl bg-[#17191d] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#7C7C74]">Sets</p>
-          <p className="text-lg font-black">{summary.setsDone}/{summary.setsTotal}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Sets</p>
+          <p className="font-display text-lg font-semibold">{summary.setsDone}/{summary.setsTotal}</p>
         </div>
       </div>
 
       {summary.prs.length > 0 ? (
         <div className="mt-3 w-full rounded-3xl border border-[#55F670]/30 bg-[#55F670]/10 p-3.5 text-left">
-          <p className="mb-1.5 text-xs font-black uppercase tracking-wider text-[#55F670]">🔥 Récords de hoy</p>
+          <p className="mb-1.5 flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-[#55F670]">
+            <Flame className="h-3.5 w-3.5" /> Récords de hoy
+          </p>
           {summary.prs.map(p => (
             <p key={p.nombre} className="truncate text-sm">
               <b>{p.nombre}</b>: <span className="text-[#7C7C74] line-through">{p.antes}kg</span> → <b className="text-[#55F670]">{p.ahora}kg</b>
@@ -94,7 +99,7 @@ export default function FinishScreen({
         </div>
       ) : (
         <p className="mt-3 w-full rounded-3xl bg-[#17191d] p-3 text-xs text-[#7C7C74]">
-          Sin récords hoy — pero sumaste 1 día más a tu semana ({summary.weekCount}/5). La constancia es la progresión 💪
+          Sin récords hoy, y sumaste 1 día más a tu semana ({summary.weekCount}/5). La constancia es la progresión.
         </p>
       )}
 
@@ -102,7 +107,7 @@ export default function FinishScreen({
         Volver al inicio
       </button>
       <button onClick={onProgress} className="mt-2 w-full rounded-2xl bg-[#1f2227] py-3.5 text-sm font-bold">
-        Ver progresión 📈
+        <span className="inline-flex items-center justify-center gap-1.5"><TrendingUp className="h-4 w-4" /> Ver progresión</span>
       </button>
     </div>
   )

@@ -1,11 +1,17 @@
 // Persistencia Fase 1: localStorage por perfil (Yo / Novia). En Fase 2 se sincroniza con Supabase.
 export type Profile = 'yo' | 'novia'
 
+export const PROFILE_LABEL: Record<Profile, string> = {
+  yo: 'Juan',
+  novia: 'Marian',
+}
+
 // v2: reset limpio (los datos de prueba v1 se ignoran)
 const K_WEIGHTS = 'gymapp.weights.v2'
 const K_DONE = 'gymapp.done.v2'
 const K_HIST = 'gymapp.history.v2'
 const K_REST = 'gymapp.restSecs.v2'
+const K_GAP = 'gymapp.restGap.v1' // segundos extra al cambiar de ejercicio
 const K_WEEK = 'gymapp.week.v2' // semana de entrenamiento actual
 const K_SESSIONS = 'gymapp.sessions.v2' // sesiones: cada rutina iniciada guarda su tiempo
 
@@ -64,12 +70,40 @@ export function getRestSecs(): number {
 }
 export function setRestSecs(secs: number) { write(K_REST, secs) }
 
-export function getWeek(): number { return read<number>(K_WEEK, 1) || 1 }
-export function setWeek(w: number) { write(K_WEEK, w) }
+export function getRestGap(): number {
+  const v = read<number>(K_GAP, 60)
+  return typeof v === 'number' && v >= 0 ? v : 60
+}
+export function setRestGap(secs: number) { write(K_GAP, secs) }
+
+type WeekStore = Partial<Record<Profile, number>>
+
+function readWeekStore(): WeekStore | number {
+  return read<WeekStore | number>(K_WEEK, 1)
+}
+
+export function getWeek(profile: Profile = 'yo'): number {
+  const raw = readWeekStore()
+  if (typeof raw === 'number') return raw || 1
+  const own = raw?.[profile]
+  if (typeof own === 'number' && own >= 1) return own
+  const other = profile === 'yo' ? raw?.novia : raw?.yo
+  return typeof other === 'number' && other >= 1 ? other : 1
+}
+
+export function setWeek(profile: Profile, w: number) {
+  const raw = readWeekStore()
+  const legacy = typeof raw === 'number' ? (raw || 1) : 1
+  const next: WeekStore = typeof raw === 'object' && raw
+    ? { yo: raw.yo ?? legacy, novia: raw.novia ?? legacy }
+    : { yo: legacy, novia: legacy }
+  next[profile] = w
+  write(K_WEEK, next)
+}
 
 export function clearAll() {
   try {
-    for (const k of [K_WEIGHTS, K_DONE, K_HIST, K_SESSIONS, K_REST, K_WEEK,
+    for (const k of [K_WEIGHTS, K_DONE, K_HIST, K_SESSIONS, K_REST, K_GAP, K_WEEK,
       'gymapp.weights.v1', 'gymapp.done.v1', 'gymapp.history.v1',
       'gymapp.sessions.v1', 'gymapp.restSecs.v1', 'gymapp.week.v1',
       'gymapp.workoutStart.v1', 'gymapp.workoutEnd.v1']) localStorage.removeItem(k)
@@ -147,8 +181,12 @@ export function getTrainedDates(profile: Profile): string[] {
   const dates = new Set<string>()
   for (const key of Object.keys(all)) {
     if (!all[key]) continue
-    const [date, , kind] = key.split(':')
-    if (kind?.startsWith('work') && /^\d{4}-\d{2}-\d{2}$/.test(date)) dates.add(date)
+    const m = key.match(/^(\d{4}-\d{2}-\d{2}):.*:(work\d+)$/)
+    if (m) dates.add(m[1])
   }
   return [...dates].sort()
+}
+// Puntito verde: rutina terminada o, si no llegaste a Terminar, al menos una serie de trabajo.
+export function getMarkedDates(profile: Profile): string[] {
+  return [...new Set([...getFinishedDates(profile), ...getTrainedDates(profile)])].sort()
 }

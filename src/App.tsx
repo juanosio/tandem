@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DIAS, descansoMedio } from './types'
 import { getDayExercises, SEMANAS_DISPONIBLES } from './data/semanas'
-import { endSession, getRestSecs, getWeek, isSetDone, setWeek, startSession, todayStr, type Profile } from './lib/storage'
+import { Dumbbell } from 'lucide-react'
+import { endSession, getRestGap, getWeek, isSetDone, PROFILE_LABEL, setWeek, startSession, todayStr, type Profile } from './lib/storage'
 import BottomNav, { type Tab } from './components/BottomNav'
 import ErrorBoundary from './components/ErrorBoundary'
 import FinishScreen from './components/FinishScreen'
 import HomeScreen from './components/HomeScreen'
 import PlayerScreen from './components/PlayerScreen'
-import RestScreen from './components/RestScreen'
+import RestScreen, { beep } from './components/RestScreen'
 import ProgressScreen from './components/ProgressScreen'
 import SettingsScreen from './components/SettingsScreen'
 
@@ -21,129 +22,197 @@ function diaDeHoy(): string {
   return 'Lunes'
 }
 
+type Slot = {
+  tab: Tab
+  dia: string
+  idx: number
+  activeDate: string
+  resting: boolean
+  restUntil: number | null
+  restSecs: number
+  finished: boolean
+}
+
+function freshSlot(): Slot {
+  return {
+    tab: 'inicio',
+    dia: diaDeHoy(),
+    idx: 0,
+    activeDate: todayStr(),
+    resting: false,
+    restUntil: null,
+    restSecs: 0,
+    finished: false,
+  }
+}
+
 export default function App() {
-  const [tab, setTab] = useState<Tab>('inicio')
   const [profile, setProfile] = useState<Profile>('yo')
-  const [dia, setDia] = useState<string>(() => diaDeHoy())
-  const [idx, setIdx] = useState(0)
-  const [activeDate, setActiveDate] = useState<string>(() => todayStr()) // día que se está registrando (puede ser otro que hoy)
-  const [resting, setResting] = useState(false) // fase descanso entre ejercicios
-  const [restKey, setRestKey] = useState(0) // reinicia el timer cada vez
-  const [finished, setFinished] = useState(false)
-  const [semana, setSemana] = useState<number>(() => getWeek())
+  const [byProfile, setByProfile] = useState<Record<Profile, Slot>>(() => ({ yo: freshSlot(), novia: freshSlot() }))
+  const [semana, setSemana] = useState<number>(() => getWeek('yo'))
+  const slot = byProfile[profile]
 
-  const list = useMemo(() => getDayExercises(semana, dia), [semana, dia])
-  const ex = list[Math.min(idx, list.length - 1)]
+  const list = useMemo(() => getDayExercises(semana, slot.dia, profile), [semana, slot.dia, profile])
+  const ex = list[Math.min(slot.idx, Math.max(0, list.length - 1))]
 
-  const countDoneToday = () => {
-    return list.filter(e =>
-      Array.from({ length: e.workSets }, (_, i) => isSetDone(profile, `${activeDate}:${e.id}:work${i}`)).every(Boolean),
+  const update = (who: Profile, recipe: (cur: Slot) => Slot) => {
+    setByProfile(all => ({ ...all, [who]: recipe(all[who]) }))
+  }
+
+  const countDone = (who: Profile, date: string, exercises: typeof list) => {
+    return exercises.filter(e =>
+      Array.from({ length: e.workSets }, (_, i) => isSetDone(who, `${date}:${e.id}:work${i}`)).every(Boolean),
     ).length
   }
 
-  const startAt = (i: number, dateStr: string) => {
-    setActiveDate(dateStr)
-    startSession(profile, dateStr, dia, list.length) // nueva sesión en el día elegido: contador desde 0
-    setIdx(i); setFinished(false); setResting(false); setTab('rutina')
+  const restDone = (who: Profile = profile) => {
+    setByProfile(all => {
+      const cur = all[who]
+      if (!cur.resting) return all
+      const n = getDayExercises(who === profile ? semana : getWeek(who), cur.dia, who).length
+      return {
+        ...all,
+        [who]: { ...cur, resting: false, restUntil: null, idx: Math.min(cur.idx + 1, Math.max(0, n - 1)) },
+      }
+    })
   }
-  const changeDia = (d: string) => { setDia(d); setIdx(0); setFinished(false); setResting(false) }
-  const changeSemana = (s: number) => { setSemana(s); setWeek(s); setIdx(0); setFinished(false); setResting(false) }
 
-  // Completar ejercicio -> descanso (o fin si era el último: cierra la sesión y detiene el contador)
+  useEffect(() => {
+    if (!slot.resting || slot.restUntil == null) return
+    const overdue = slot.restUntil <= Date.now()
+    const ms = Math.max(0, slot.restUntil - Date.now())
+    const t = setTimeout(() => {
+      if (!overdue && slot.tab === 'rutina') beep()
+      restDone(profile)
+    }, ms)
+    return () => clearTimeout(t)
+  }, [profile, slot.resting, slot.restUntil, slot.tab])
+
+  const startAt = (i: number, dateStr: string) => {
+    startSession(profile, dateStr, slot.dia, list.length)
+    update(profile, cur => ({ ...cur, activeDate: dateStr, idx: i, finished: false, resting: false, restUntil: null, tab: 'rutina' }))
+  }
+  const changeDia = (d: string) => update(profile, cur => ({ ...cur, dia: d, idx: 0, finished: false, resting: false, restUntil: null }))
+  const changeProfile = (p: Profile) => {
+    setProfile(p)
+    setSemana(getWeek(p))
+  }
+  const changeSemana = (s: number) => {
+    setSemana(s)
+    setWeek(profile, s)
+    update(profile, cur => ({ ...cur, idx: 0, finished: false, resting: false, restUntil: null }))
+  }
+
   const completeExercise = () => {
-    if (idx >= list.length - 1) {
-      endSession(profile, activeDate, countDoneToday(), list.length)
-      setFinished(true)
+    if (slot.idx >= list.length - 1) {
+      endSession(profile, slot.activeDate, countDone(profile, slot.activeDate, list), list.length)
+      update(profile, cur => ({ ...cur, finished: true, resting: false, restUntil: null }))
       return
     }
-    setResting(true); setRestKey(k => k + 1)
+    const secs = descansoMedio(list[slot.idx]?.descanso, 90) + getRestGap()
+    update(profile, cur => ({ ...cur, resting: true, restSecs: secs, restUntil: Date.now() + secs * 1000 }))
   }
-  // Termina el descanso -> siguiente ejercicio
-  const restDone = () => {
-    setResting(false)
-    setIdx(i => Math.min(i + 1, list.length - 1))
+
+  const addRest = (secs: number) => {
+    update(profile, cur => ({
+      ...cur,
+      restSecs: cur.restSecs + secs,
+      restUntil: (cur.restUntil ?? Date.now()) + secs * 1000,
+    }))
   }
 
   return (
     <div className="min-h-full bg-[#0F1012] text-[#FCFCFC]">
-      {/* Glows difuminados de fondo estilo referencia */}
       <div className="glow left-[-80px] top-[-60px] h-72 w-72 bg-[#B2EE37]/15" />
       <div className="glow right-[-100px] top-[35%] h-80 w-80 bg-[#55F670]/10" />
       <div className="glow bottom-[-80px] left-[20%] h-72 w-72 bg-[#B2EE37]/10" />
-      <div className="relative z-10 mx-auto max-w-xl px-3 pb-24 pt-3">
-        {/* Header */}
-        <header className="mb-3 flex items-center justify-between">
-          <h1 className="text-lg font-black">🏋️ GymApp</h1>
-          <div className="flex rounded-2xl bg-[#1f2227] p-1 text-sm font-black">
-            <button onClick={() => setProfile('yo')} className={`rounded-xl px-4 py-1.5 ${profile === 'yo' ? 'bg-[#B2EE37] text-black' : 'text-[#7C7C74]'}`}>Yo</button>
-            <button onClick={() => setProfile('novia')} className={`rounded-xl px-4 py-1.5 ${profile === 'novia' ? 'bg-[#B2EE37] text-black' : 'text-[#7C7C74]'}`}>Novia</button>
+      <div className="relative z-10 mx-auto max-w-xl px-3 pb-28 pt-3">
+        <header className="mb-3 flex items-center justify-between gap-2">
+          <h1 className="flex shrink-0 items-center gap-1.5 text-xl font-bold tracking-tight">
+            <Dumbbell className="h-5 w-5 text-[#B2EE37]" strokeWidth={2.5} />
+            Tándem
+          </h1>
+          <div className="flex rounded-2xl bg-[#1f2227] p-1 text-base font-black">
+            {(['yo', 'novia'] as const).map(p => (
+              <button key={p} onClick={() => changeProfile(p)}
+                className={`min-h-11 rounded-xl px-3.5 ${profile === p ? 'bg-[#B2EE37] text-black' : 'text-[#7C7C74]'}`}>
+                {PROFILE_LABEL[p]}
+              </button>
+            ))}
           </div>
         </header>
 
-        {/* Un solo boundary con key estable: dia/idx NO remontan (rompía las píldoras) */}
-        <ErrorBoundary key={`${tab}-${profile}`}>
-        {tab === 'inicio' && (
+        <ErrorBoundary key={`${slot.tab}-${profile}`}>
+        {slot.tab === 'inicio' && (
           <HomeScreen
-            profile={profile} dia={dia} setDia={changeDia} onStart={startAt}
+            profile={profile} dia={slot.dia} setDia={changeDia} onStart={startAt}
             semana={semana} setSemana={changeSemana} semanas={SEMANAS_DISPONIBLES}
           />
         )}
 
-        {tab === 'rutina' && (
+        {slot.tab === 'rutina' && (
           <>
-            {finished ? (
+            {slot.finished ? (
               <FinishScreen
                 profile={profile}
-                dia={dia}
-                date={activeDate}
+                dia={slot.dia}
+                date={slot.activeDate}
                 list={list}
-                onHome={() => { setTab('inicio'); setFinished(false); setIdx(0) }}
-                onProgress={() => setTab('progreso')}
+                onHome={() => update(profile, cur => ({ ...cur, tab: 'inicio', finished: false, idx: 0 }))}
+                onProgress={() => update(profile, cur => ({ ...cur, tab: 'progreso' }))}
               />
-            ) : resting ? (
+            ) : slot.resting && slot.restUntil != null ? (
               <RestScreen
-                key={`${restKey}-${idx}`}
                 profile={profile}
-                date={activeDate}
-                seconds={descansoMedio(list[idx]?.descanso, getRestSecs())}
-                hint={list[idx]?.descanso ?? null}
-                nextName={list[Math.min(idx + 1, list.length - 1)]?.nombre ?? null}
-                onSkip={restDone}
-                onDone={restDone}
-                remaining={{ done: idx + 1, total: list.length }}
+                date={slot.activeDate}
+                until={slot.restUntil}
+                totalSecs={slot.restSecs}
+                hint={list[slot.idx]?.descanso ?? null}
+                nextEx={slot.idx + 1 < list.length ? list[slot.idx + 1] : null}
+                nextName={slot.idx + 1 < list.length ? list[slot.idx + 1].nombre : null}
+                onSkip={() => restDone(profile)}
+                extraSecs={getRestGap()}
+                onAdd={addRest}
+                remaining={{ done: slot.idx + 1, total: list.length }}
               />
             ) : ex ? (
               <PlayerScreen
                 key={`${profile}-${ex.id}`}
                 ex={ex}
                 profile={profile}
-                date={activeDate}
-                index={idx}
+                date={slot.activeDate}
+                index={slot.idx}
                 total={list.length}
-                isLast={idx >= list.length - 1}
-                onPrev={() => setIdx(i => Math.max(0, i - 1))}
+                isLast={slot.idx >= list.length - 1}
+                onPrev={() => update(profile, cur => ({ ...cur, idx: Math.max(0, cur.idx - 1) }))}
                 onComplete={completeExercise}
+                semana={semana}
               />
             ) : null}
           </>
         )}
 
-        {tab === 'progreso' && <ProgressScreen profile={profile} dia={dia} semana={semana} />}
-        {tab === 'ajustes' && <SettingsScreen profile={profile} setProfile={setProfile} />}
+        {slot.tab === 'progreso' && <ProgressScreen profile={profile} dia={slot.dia} semana={semana} />}
+        {slot.tab === 'ajustes' && (
+          <SettingsScreen
+            profile={profile} setProfile={changeProfile}
+            semana={semana} setSemana={changeSemana} semanas={SEMANAS_DISPONIBLES}
+          />
+        )}
         </ErrorBoundary>
 
-        {tab !== 'inicio' && tab !== 'rutina' && (
+        {slot.tab === 'progreso' && (
           <div className="mb-3 flex gap-1.5 overflow-x-auto">
             {DIAS.map(d => (
               <button key={d} onClick={() => changeDia(d)}
-                className={`shrink-0 rounded-2xl px-3.5 py-2 text-xs font-bold ${dia === d ? 'bg-[#FCFCFC] text-black' : 'bg-[#1f2227] text-[#7C7C74]'}`}>
+                className={`min-h-11 shrink-0 rounded-2xl px-4 text-sm font-bold ${slot.dia === d ? 'bg-[#FCFCFC] text-black' : 'bg-[#1f2227] text-[#7C7C74]'}`}>
                 {d.slice(0, 3)}
               </button>
             ))}
           </div>
         )}
       </div>
-      <BottomNav tab={tab} setTab={t => { setTab(t); setResting(false) }} />
+      <BottomNav tab={slot.tab} setTab={t => update(profile, cur => ({ ...cur, tab: t }))} />
     </div>
   )
 }

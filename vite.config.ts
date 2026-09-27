@@ -11,9 +11,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Gym App - Mi Rutina',
-        short_name: 'GymApp',
-        description: 'Rutina Lun-Vie con pesos, series y progresión',
+        name: 'Tándem',
+        short_name: 'Tándem',
+        description: 'La rutina de dos, semana a semana',
         theme_color: '#09090b',
         background_color: '#09090b',
         display: 'standalone',
@@ -24,7 +24,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,json,svg,png,jpg,jpeg,webp,gif,mp4}'],
+        globPatterns: ['**/*.{js,css,html,json,svg,png,jpg,jpeg,webp,gif,mp4,woff,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // GIFs de hasta 5MB offline
       },
     }),

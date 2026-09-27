@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
+import { TrendingUp } from 'lucide-react'
 import { getDayExercises } from '../data/semanas'
-import { fmtMin, getAvgMs, getFinishedDates, getHistory, getSessions, type HistEntry, type Profile } from '../lib/storage'
+import { fmtMin, getAvgMs, getFinishedDates, getHistory, getMarkedDates, getSessions, type HistEntry, type Profile } from '../lib/storage'
 import MonthCalendar from './MonthCalendar'
 
 // Gráfica de línea simple (SVG, sin dependencias) del peso en el tiempo.
@@ -25,7 +26,7 @@ function MiniChart({ data }: { data: HistEntry[] }) {
         <g key={i}>
           <circle cx={x(i)} cy={y(d.peso)} r={i === n - 1 ? 5 : 3.5} fill={i === n - 1 ? '#B2EE37' : '#0F1012'} stroke={up ? '#55F670' : '#B2EE37'} strokeWidth="2.5" />
           {i === n - 1 && (
-            <text x={Math.min(x(i), W - 44)} y={Math.max(y(d.peso) - 8, 10)} fill="#B2EE37" fontSize="13" fontWeight="900">{d.peso}kg</text>
+            <text x={Math.min(x(i), W - 44)} y={Math.max(y(d.peso) - 8, 10)} fill="#B2EE37" fontSize="14" fontWeight="600" fontFamily="Oswald, Impact, sans-serif">{d.peso}kg</text>
           )}
         </g>
       ))}
@@ -38,39 +39,40 @@ function MiniChart({ data }: { data: HistEntry[] }) {
 // Progresión visual: stats + gráfica por ejercicio.
 export default function ProgressScreen({ profile, dia, semana }: { profile: Profile; dia: string; semana: number }) {
   const finished = useMemo(() => getFinishedDates(profile), [profile])
-  const trained = useMemo(() => new Set(finished), [finished])
+  const marked = useMemo(() => getMarkedDates(profile), [profile])
+  const trained = useMemo(() => new Set(marked), [marked])
   const monday = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }, [])
-  const weekCount = finished.filter(t => t >= monday).length
+  const weekCount = marked.filter(t => t >= monday).length
 
-  const list = getDayExercises(semana, dia)
+  const list = getDayExercises(semana, dia, profile)
   const avg = getAvgMs(profile, dia)
   const sessions = getSessions(profile).filter(s => s.endTs !== null).length
 
   return (
     <div>
-      <h2 className="mb-1 text-center text-xl font-black uppercase">Progresión</h2>
-      <p className="mb-3 text-center text-xs text-[#7C7C74]">Semana {semana} · Día: {dia} · pesos que has levantado en el tiempo</p>
+      <h2 className="mb-1 text-center text-2xl font-black uppercase">Progresión</h2>
+      <p className="mb-3 text-center text-sm text-[#7C7C74]">Semana {semana} · Día: {dia} · pesos que has levantado en el tiempo</p>
 
       <div className="mb-3 grid grid-cols-3 gap-2">
         <div className="rounded-3xl bg-[#17191d]/90 p-3 text-center">
-          <p className="text-2xl font-black text-[#B2EE37]">{finished.length}</p>
+          <p className="font-display text-2xl font-semibold text-[#B2EE37]">{finished.length}</p>
           <p className="text-[11px] text-[#7C7C74]">rutinas listas</p>
         </div>
         <div className="rounded-3xl bg-[#17191d]/90 p-3 text-center">
-          <p className="text-2xl font-black text-[#B2EE37]">{weekCount}/5</p>
+          <p className="font-display text-2xl font-semibold text-[#B2EE37]">{weekCount}/5</p>
           <p className="text-[11px] text-[#7C7C74]">esta semana</p>
         </div>
         <div className="rounded-3xl bg-[#17191d]/90 p-3 text-center">
-          <p className="text-lg font-black text-[#B2EE37]">{avg ? fmtMin(avg) : '—'}</p>
+          <p className="font-display text-lg font-semibold text-[#B2EE37]">{avg ? fmtMin(avg) : '—'}</p>
           <p className="text-[11px] text-[#7C7C74]">promedio {dia.slice(0, 3)}</p>
         </div>
       </div>
 
-      <p className="mb-1.5 text-xs font-black uppercase tracking-wider text-[#7C7C74]">Calendario · días que terminaste</p>
+      <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Calendario · días que entrenaste</p>
       <div className="mb-3">
         <MonthCalendar trained={trained} />
       </div>
@@ -84,10 +86,10 @@ export default function ProgressScreen({ profile, dia, semana }: { profile: Prof
           return (
             <div key={e.id} className="rounded-3xl bg-[#17191d]/90 px-4 py-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-bold">{e.nombre}</p>
+                <p className="truncate text-base font-bold">{e.nombre}</p>
                 {gain !== 0 && (
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black ${gain > 0 ? 'bg-[#55F670]/15 text-[#55F670]' : 'bg-[#1f2227] text-[#7C7C74]'}`}>
-                    {gain > 0 ? `+${gain}kg 📈` : `${gain}kg`}
+                    {gain > 0 ? <span className="inline-flex items-center gap-0.5"><TrendingUp className="h-3 w-3" /> +{gain} kg</span> : `${gain} kg`}
                   </span>
                 )}
               </div>
