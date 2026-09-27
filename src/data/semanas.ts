@@ -4,7 +4,7 @@ import { RUTINA } from './rutina'
 // Modelo por semanas: la intensidad/cambios van por semana.
 // Semana 1 Lunes = datos ricos del usuario (ES+EN, videos, descanso, RPE).
 // Resto de días/semanas: fallback a la tabla base hasta que los definamos.
-export const SEMANAS_DISPONIBLES = [1, 2, 3, 4, 5, 6, 7, 8]
+export const SEMANAS_DISPONIBLES = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 const S1_LUNES: Exercise[] = [
   {
@@ -183,6 +183,11 @@ export function getDayExercises(semana: number, dia: string): Exercise[] {
   if (semana === 8 && dia === 'Miércoles') return S8_MIERCOLES
   if (semana === 8 && dia === 'Jueves') return S8_JUEVES
   if (semana === 8 && dia === 'Viernes') return S8_VIERNES
+  if (semana === 9 && dia === 'Lunes') return S9_LUNES
+  if (semana === 9 && dia === 'Martes') return S9_MARTES
+  if (semana === 9 && dia === 'Miércoles') return S9_MIERCOLES
+  if (semana === 9 && dia === 'Jueves') return S9_JUEVES
+  if (semana === 9 && dia === 'Viernes') return S9_VIERNES
   return RUTINA.filter(e => e.dia === dia).sort((a, b) => a.orden - b.orden)
 }
 
@@ -1234,3 +1239,10 @@ const S8_VIERNES = S8(S7_VIERNES, 'vie', [
   { cs: '1', cd: C1, ws: 2, reps: '15-20', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
   { cs: '1 a 2', cd: C2, ws: 2, reps: '12-15', early: '~8-9', last: '10', rest: '1-2 min', fail: true },
 ])
+
+// Semana 9: copia exacta de la Semana 8.
+const S9_LUNES = COPY(S8_LUNES, 9, 'lun')
+const S9_MARTES = COPY(S8_MARTES, 9, 'mar')
+const S9_MIERCOLES = COPY(S8_MIERCOLES, 9, 'mie')
+const S9_JUEVES = COPY(S8_JUEVES, 9, 'jue')
+const S9_VIERNES = COPY(S8_VIERNES, 9, 'vie')
