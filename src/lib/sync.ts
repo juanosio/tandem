@@ -1,5 +1,5 @@
-import { clearOutbox, metaAt, onDirty, readOutbox, removeOutbox, setMeta, type SyncOp } from './outbox'
-import { ingestRemote, notifyStorage, snapshotLocal } from './storage'
+import { clearOutbox, enqueue, metaAt, onDirty, readOutbox, removeOutbox, setMeta, type SyncOp } from './outbox'
+import { applyRemoteWipe, getWipedAt, ingestRemote, mergeTrash, notifyStorage, readTrash, snapshotLocal, type TrashEntry } from './storage'
 import { isCloudConfigured, supabase } from './supabase'
 
 export type SyncStatus = 'local' | 'ok' | 'syncing' | 'offline'
@@ -22,11 +22,14 @@ export function subscribeSync(fn: () => void) {
 async function fetchRemote(): Promise<SyncOp[]> {
   if (!supabase) return []
   const ops: SyncOp[] = []
-  const take = async (query: PromiseLike<{ data: unknown; error: { message: string } | null }>, map: (row: Record<string, unknown>) => SyncOp) => {
+  const take = async (query: PromiseLike<{ data: unknown; error: { message: string } | null }>, map: (row: Record<string, unknown>) => SyncOp | null) => {
     const { data, error } = await query
     if (error) throw new Error(error.message)
     const rows = Array.isArray(data) ? data : []
-    for (const row of rows) ops.push(map(row as Record<string, unknown>))
+    for (const row of rows) {
+      const op = map(row as Record<string, unknown>)
+      if (op) ops.push(op)
+    }
   }
   const iso = (v: unknown) => typeof v === 'string' ? v : new Date(String(v)).toISOString()
 
@@ -86,17 +89,15 @@ async function fetchRemote(): Promise<SyncOp[]> {
     chosen: String(r.chosen_key),
   }))
   await take(supabase.from('prefs').select('*'), r => {
-    const value = (r.value ?? {}) as { secs?: number; machine?: string; mins?: number }
-    if (r.id === 'gap') {
-      return { id: 'gap', at: iso(r.updated_at), kind: 'gap', secs: Number(value.secs ?? 60) }
+    const value = (r.value ?? {}) as { secs?: number; machine?: string; mins?: number; items?: TrashEntry[] }
+    const at = iso(r.updated_at)
+    if (r.id === 'wipe') return { id: 'wipe', at, kind: 'wipe' }
+    if (r.id === 'trash') return { id: 'trash', at, kind: 'trash', items: value.items ?? [] }
+    if (r.id === 'gap') return { id: 'gap', at, kind: 'gap', secs: Number(value.secs ?? 60) }
+    if (r.id === 'cardio') {
+      return { id: 'cardio', at, kind: 'cardio', machine: value.machine ?? 'Caminadora', mins: Number(value.mins ?? 15) }
     }
-    return {
-      id: 'cardio',
-      at: iso(r.updated_at),
-      kind: 'cardio',
-      machine: value.machine ?? 'Caminadora',
-      mins: Number(value.mins ?? 15),
-    }
+    return null
   })
   return ops
 }
@@ -143,6 +144,21 @@ async function pushOp(op: SyncOp) {
     ;({ error } = await supabase.from('prefs').upsert({
       id: 'cardio', value: { machine: op.machine, mins: op.mins }, updated_at: at,
     }, { onConflict: 'id' }))
+  } else if (op.kind === 'trash') {
+    ;({ error } = await supabase.from('prefs').upsert({
+      id: 'trash', value: { items: op.items ?? [] }, updated_at: at,
+    }, { onConflict: 'id' }))
+  } else if (op.kind === 'wipe') {
+    const tables = ['weights', 'history', 'checks', 'sessions', 'weeks', 'swaps'] as const
+    for (const table of tables) {
+      const deleted = await supabase.from(table).delete().neq('profile', '')
+      if (deleted.error) throw new Error(deleted.error.message)
+    }
+    const prefs = await supabase.from('prefs').delete().in('id', ['gap', 'cardio'])
+    if (prefs.error) throw new Error(prefs.error.message)
+    ;({ error } = await supabase.from('prefs').upsert({
+      id: 'wipe', value: { at }, updated_at: at,
+    }, { onConflict: 'id' }))
   }
   if (error) throw new Error(error.message)
 }
@@ -170,7 +186,28 @@ export async function syncNow() {
   try {
     const remote = await fetchRemote()
     let changed = false
+    const pendingWipe = readOutbox().find(op => op.kind === 'wipe')
+    const remoteWipe = remote.find(op => op.kind === 'wipe')
+    let wipeAt = pendingWipe?.at ?? getWipedAt()
+    if (remoteWipe && remoteWipe.at > wipeAt) {
+      applyRemoteWipe(remoteWipe.at)
+      wipeAt = remoteWipe.at
+      changed = true
+    }
+    const remoteTrash = remote.find(op => op.kind === 'trash')
+    if (remoteTrash && remoteTrash.at > (readOutbox().find(op => op.kind === 'trash')?.at ?? metaAt('trash'))) {
+      mergeTrash(remoteTrash.items as TrashEntry[] | undefined, remoteTrash.at)
+      removeOutbox('trash')
+      changed = true
+    }
+    const trashIds = (items: { id: string }[] | undefined) => (items ?? []).map(item => item.id).sort().join('|')
+    if (trashIds(readTrash()) !== trashIds(remoteTrash?.items as TrashEntry[] | undefined)) {
+      const items = readTrash()
+      if (items.length) enqueue({ id: 'trash', at: new Date().toISOString(), kind: 'trash', items })
+    }
     for (const row of remote) {
+      if (row.kind === 'wipe' || row.kind === 'trash') continue
+      if (wipeAt && row.at <= wipeAt) continue
       const pending = readOutbox().find(op => op.id === row.id)
       const localAt = pending?.at ?? metaAt(row.id)
       if (row.at > localAt) {
@@ -180,14 +217,22 @@ export async function syncNow() {
       }
     }
     const uploads = new Map<string, SyncOp>()
-    for (const op of readOutbox()) uploads.set(op.id, op)
+    for (const op of readOutbox()) {
+      if (op.kind !== 'wipe' && op.kind !== 'trash' && wipeAt && op.at <= wipeAt) continue
+      uploads.set(op.id, op)
+    }
     const remoteAt = new Map(remote.map(row => [row.id, row.at]))
     const now = new Date().toISOString()
     for (const op of snapshotLocal()) {
       if (uploads.has(op.id) || remoteAt.has(op.id) || metaAt(op.id)) continue
+      if (wipeAt) continue
       uploads.set(op.id, { ...op, at: now })
     }
-    for (const op of uploads.values()) {
+    const wipeOp = uploads.get('wipe')
+    if (wipeOp) uploads.delete('wipe')
+    const ordered = [...uploads.values()]
+    if (wipeOp) ordered.push(wipeOp)
+    for (const op of ordered) {
       await pushOp(op)
       removeOutbox(op.id)
       setMeta(op.id, op.at)

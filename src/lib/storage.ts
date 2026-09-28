@@ -1,5 +1,5 @@
 // Local primero. Si hay Supabase, cada cambio entra a la cola y se sube al tener internet.
-import { clearMeta, clearOutbox, enqueue, setMeta, type SyncOp } from './outbox'
+import { clearMeta, clearOutbox, enqueue, readOutbox, setMeta, type SyncOp } from './outbox'
 
 export type Profile = 'yo' | 'novia'
 
@@ -18,6 +18,8 @@ const K_WEEK = 'gymapp.week.v2' // semana de entrenamiento actual
 const K_SESSIONS = 'gymapp.sessions.v2' // sesiones: cada rutina iniciada guarda su tiempo
 const K_SWAP = 'gymapp.swap.v1' // ejercicio principal elegido por perfil
 const K_CARDIO = 'gymapp.cardioPref.v1' // máquina y minutos del cardio extra de Juan
+const K_TRASH = 'gymapp.trash.v1' // últimas 3 rutinas borradas
+const K_WIPED = 'gymapp.wipedAt.v1'
 
 export interface HistEntry { profile: Profile; exerciseId: string; date: string; peso: number }
 
@@ -130,20 +132,15 @@ export function setWeek(profile: Profile, w: number) {
 }
 
 const BACKUP_KEYS = [K_WEIGHTS, K_DONE, K_HIST, K_SESSIONS, K_REST, K_GAP, K_WEEK, K_SWAP, K_CARDIO]
+const LEGACY_KEYS = [
+  'gymapp.weights.v1', 'gymapp.done.v1', 'gymapp.history.v1',
+  'gymapp.sessions.v1', 'gymapp.restSecs.v1', 'gymapp.week.v1',
+  'gymapp.workoutStart.v1', 'gymapp.workoutEnd.v1',
+]
 
-export function clearAll() {
-  try {
-    for (const k of [...BACKUP_KEYS,
-      'gymapp.weights.v1', 'gymapp.done.v1', 'gymapp.history.v1',
-      'gymapp.sessions.v1', 'gymapp.restSecs.v1', 'gymapp.week.v1',
-      'gymapp.workoutStart.v1', 'gymapp.workoutEnd.v1']) localStorage.removeItem(k)
-  } catch { /* noop */ }
-  clearOutbox()
-  clearMeta()
-  notifyStorage()
-}
+export interface TrashEntry { id: string; at: string; data: Record<string, unknown> }
 
-export function exportBackup(): string {
+function captureBackup(): Record<string, unknown> {
   const data: Record<string, unknown> = {}
   for (const k of BACKUP_KEYS) {
     try {
@@ -151,7 +148,72 @@ export function exportBackup(): string {
       if (raw) data[k] = JSON.parse(raw)
     } catch { /* clave dañada: se omite de la copia */ }
   }
-  return JSON.stringify({ app: 'tandem', v: 1, at: new Date().toISOString(), data })
+  return data
+}
+
+function clearTrainingKeys() {
+  try {
+    for (const k of [...BACKUP_KEYS, ...LEGACY_KEYS]) localStorage.removeItem(k)
+  } catch { /* noop */ }
+}
+
+export function getWipedAt(): string {
+  try { return localStorage.getItem(K_WIPED) ?? '' } catch { return '' }
+}
+
+function setWipedAt(at: string) {
+  try { localStorage.setItem(K_WIPED, at) } catch { /* */ }
+}
+
+export function readTrash(): TrashEntry[] {
+  const all = read<TrashEntry[]>(K_TRASH, [])
+  return Array.isArray(all) ? all.filter(item => item?.id && item.data).slice(0, 3) : []
+}
+
+export function mergeTrash(incoming: TrashEntry[] | undefined, at: string) {
+  const map = new Map<string, TrashEntry>()
+  for (const item of [...readTrash(), ...(incoming ?? [])]) {
+    if (item?.id && item.data) map.set(item.id, item)
+  }
+  const next = [...map.values()].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 3)
+  write(K_TRASH, next, true)
+  setMeta('trash', at)
+}
+
+export function applyRemoteWipe(at: string) {
+  if (!at || at <= getWipedAt()) return
+  const keep = readOutbox().filter(op => op.at > at && op.kind !== 'wipe')
+  clearTrainingKeys()
+  clearOutbox()
+  clearMeta()
+  setWipedAt(at)
+  for (const op of keep) enqueue(op)
+}
+
+export function clearAll() {
+  const data = captureBackup()
+  const at = stamp()
+  const items = Object.keys(data).length
+    ? [{ id: at, at, data }, ...readTrash()].slice(0, 3)
+    : readTrash()
+  clearTrainingKeys()
+  clearOutbox()
+  clearMeta()
+  setWipedAt(at)
+  if (items.length) write(K_TRASH, items, true)
+  if (Object.keys(data).length) enqueue({ id: 'trash', at, kind: 'trash', items })
+  enqueue({ id: 'wipe', at, kind: 'wipe' })
+  notifyStorage()
+}
+
+export function restoreTrash(id: string): boolean {
+  const item = readTrash().find(entry => entry.id === id)
+  if (!item) return false
+  return importBackup(JSON.stringify({ app: 'tandem', data: item.data }))
+}
+
+export function exportBackup(): string {
+  return JSON.stringify({ app: 'tandem', v: 1, at: new Date().toISOString(), data: captureBackup() })
 }
 
 export function importBackup(raw: string): boolean {

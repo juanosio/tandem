@@ -17,7 +17,8 @@ export interface SyncSession {
 export interface SyncOp {
   id: string
   at: string
-  kind: 'weight' | 'hist' | 'check' | 'session' | 'week' | 'swap' | 'gap' | 'cardio'
+  kind: 'weight' | 'hist' | 'check' | 'session' | 'week' | 'swap' | 'gap' | 'cardio' | 'wipe' | 'trash'
+  items?: { id: string; at: string; data: Record<string, unknown> }[]
   profile?: Profile
   exerciseId?: string
   peso?: number

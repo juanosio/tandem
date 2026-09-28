@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { clearAll, exportBackup, getRestGap, importBackup, PROFILE_LABEL, setRestGap, type Profile } from '../lib/storage'
+import { clearAll, exportBackup, getRestGap, importBackup, PROFILE_LABEL, readTrash, restoreTrash, setRestGap, type Profile } from '../lib/storage'
+import { useStorageRev } from '../lib/useStorage'
 import { isCloudConfigured } from '../lib/supabase'
 import { subscribeSync, syncStatus } from '../lib/sync'
 import RoutineEditor from './RoutineEditor'
@@ -19,6 +20,8 @@ export default function SettingsScreen({
   onLogout?: () => void
 }) {
   const cloud = isCloudConfigured()
+  useStorageRev()
+  const trash = readTrash()
   const cloudStatus = useSyncExternalStore(subscribeSync, syncStatus, syncStatus)
   const [gap, setGap] = useState(() => getRestGap())
   const [wipe, setWipe] = useState(false)
@@ -134,12 +137,28 @@ export default function SettingsScreen({
         </button>
       ) : (
         <div className="mt-3 rounded-3xl bg-[#17191d] p-4">
-          <p className="text-sm leading-relaxed">Esto borra los kilos de este teléfono. Si ya están en la nube, vuelven al sincronizar. La copia de la nube no se borra.</p>
+          <p className="text-sm leading-relaxed">Esto borra los kilos de este teléfono y, en cuanto haya internet, también los de la nube. Quedan guardadas las últimas 3 rutinas borradas, por si fue un error.</p>
           <button onClick={download} className="mt-3 min-h-12 w-full rounded-2xl bg-[#1f2227] text-sm font-bold">Descargar copia antes</button>
           <button onClick={() => { clearAll(); location.reload() }} className="mt-2 min-h-12 w-full rounded-2xl bg-red-500/15 text-sm font-bold text-red-400">
             Sí, borrar todo
           </button>
           <button onClick={() => setWipe(false)} className="mt-2 min-h-12 w-full rounded-2xl text-sm font-bold text-[#7C7C74]">Cancelar</button>
+        </div>
+      )}
+
+      {trash.length > 0 && (
+        <div className="mt-3 rounded-3xl bg-[#17191d] p-4">
+          <p className="text-sm font-bold uppercase tracking-wider text-[#7C7C74]">Rutinas borradas</p>
+          <p className="mt-1 text-sm leading-relaxed text-[#7C7C74]">Las últimas 3. Restaurar las vuelve a poner en este teléfono y en la nube.</p>
+          <div className="mt-2 space-y-2">
+            {trash.map(item => (
+              <button key={item.id} onClick={() => { if (restoreTrash(item.id)) location.reload() }}
+                className="flex min-h-12 w-full items-center justify-between rounded-2xl bg-[#1f2227] px-3 text-left text-sm font-bold">
+                <span>{new Date(item.at).toLocaleString('es', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}</span>
+                <span className="text-[#B2EE37]">Restaurar</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
       <p className="mt-4 text-center text-sm leading-relaxed text-[#7C7C74]">
