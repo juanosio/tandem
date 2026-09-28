@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { clearAll, exportBackup, getRestGap, importBackup, PROFILE_LABEL, readTrash, restoreTrash, setRestGap, type Profile } from '../lib/storage'
+import { clearProfile, exportBackup, getBody, getRestGap, importBackup, PROFILE_LABEL, readTrash, restoreTrash, setBody, setRestGap, type Profile } from '../lib/storage'
 import { useStorageRev } from '../lib/useStorage'
 import { isCloudConfigured } from '../lib/supabase'
 import { subscribeSync, syncStatus } from '../lib/sync'
@@ -21,7 +21,17 @@ export default function SettingsScreen({
 }) {
   const cloud = isCloudConfigured()
   useStorageRev()
-  const trash = readTrash()
+  const trash = readTrash(profile)
+  const name = PROFILE_LABEL[profile]
+  const other = PROFILE_LABEL[profile === 'yo' ? 'novia' : 'yo']
+  const savedBody = getBody(profile)
+  const [cm, setCm] = useState(String(savedBody.cm))
+  const [kg, setKg] = useState(String(savedBody.kg))
+  useEffect(() => {
+    const b = getBody(profile)
+    setCm(String(b.cm))
+    setKg(String(b.kg))
+  }, [profile])
   const cloudStatus = useSyncExternalStore(subscribeSync, syncStatus, syncStatus)
   const [gap, setGap] = useState(() => getRestGap())
   const [wipe, setWipe] = useState(false)
@@ -51,6 +61,15 @@ export default function SettingsScreen({
     } catch {
       setNote('No se pudo leer la copia.')
     }
+  }
+  const saveBody = () => {
+    const cmN = Number(String(cm).replace(',', '.'))
+    const kgN = Number(String(kg).replace(',', '.'))
+    if (!Number.isFinite(cmN) || !Number.isFinite(kgN)) return
+    setBody(profile, cmN, kgN)
+    const b = getBody(profile)
+    setCm(String(b.cm))
+    setKg(String(b.kg))
   }
   const change = (d: number) => {
     const v = Math.min(180, Math.max(0, gap + d))
@@ -115,6 +134,29 @@ export default function SettingsScreen({
         <button onClick={() => change(15)} className="font-display h-14 w-14 rounded-2xl bg-[#1f2227] text-2xl font-semibold">+</button>
       </div>
 
+      <p className="mb-1.5 mt-5 text-sm font-bold uppercase tracking-wider text-[#7C7C74]">Tu cuerpo</p>
+      <p className="mb-2 text-sm leading-relaxed text-[#7C7C74]">
+        Con esto {name} recibe una guía de por dónde empezar la primera vez que no hay peso guardado.
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="rounded-2xl bg-[#17191d] p-3">
+          <span className="block text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Estatura</span>
+          <span className="mt-1 flex items-baseline gap-1">
+            <input value={cm} inputMode="decimal" onChange={e => setCm(e.target.value)} onBlur={saveBody}
+              className="w-full bg-transparent text-2xl font-bold outline-none" />
+            <span className="text-sm text-[#7C7C74]">cm</span>
+          </span>
+        </label>
+        <label className="rounded-2xl bg-[#17191d] p-3">
+          <span className="block text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Peso</span>
+          <span className="mt-1 flex items-baseline gap-1">
+            <input value={kg} inputMode="decimal" onChange={e => setKg(e.target.value)} onBlur={saveBody}
+              className="w-full bg-transparent text-2xl font-bold outline-none" />
+            <span className="text-sm text-[#7C7C74]">kg</span>
+          </span>
+        </label>
+      </div>
+
       <RoutineEditor profile={profile} semana={semana} onChange={onRoutineChange} />
 
       <p className="mb-1.5 mt-5 text-sm font-bold uppercase tracking-wider text-[#7C7C74]">Datos</p>
@@ -133,14 +175,14 @@ export default function SettingsScreen({
 
       {!wipe ? (
         <button onClick={() => setWipe(true)} className="mt-3 min-h-14 w-full rounded-2xl bg-[#1f2227] py-4 text-base font-bold text-red-400">
-          Borrar datos de este teléfono
+          Borrar datos de {name}
         </button>
       ) : (
         <div className="mt-3 rounded-3xl bg-[#17191d] p-4">
-          <p className="text-sm leading-relaxed">Esto borra los kilos de este teléfono y, en cuanto haya internet, también los de la nube. Quedan guardadas las últimas 3 rutinas borradas, por si fue un error.</p>
+          <p className="text-sm leading-relaxed">Esto borra los kilos de {name} en este teléfono y, en cuanto haya internet, también en la nube. Los de {other} se quedan. Quedan las últimas 3 rutinas de {name} por si fue un error.</p>
           <button onClick={download} className="mt-3 min-h-12 w-full rounded-2xl bg-[#1f2227] text-sm font-bold">Descargar copia antes</button>
-          <button onClick={() => { clearAll(); location.reload() }} className="mt-2 min-h-12 w-full rounded-2xl bg-red-500/15 text-sm font-bold text-red-400">
-            Sí, borrar todo
+          <button onClick={() => { clearProfile(profile); location.reload() }} className="mt-2 min-h-12 w-full rounded-2xl bg-red-500/15 text-sm font-bold text-red-400">
+            Sí, borrar lo de {name}
           </button>
           <button onClick={() => setWipe(false)} className="mt-2 min-h-12 w-full rounded-2xl text-sm font-bold text-[#7C7C74]">Cancelar</button>
         </div>
@@ -149,7 +191,7 @@ export default function SettingsScreen({
       {trash.length > 0 && (
         <div className="mt-3 rounded-3xl bg-[#17191d] p-4">
           <p className="text-sm font-bold uppercase tracking-wider text-[#7C7C74]">Rutinas borradas</p>
-          <p className="mt-1 text-sm leading-relaxed text-[#7C7C74]">Las últimas 3. Restaurar las vuelve a poner en este teléfono y en la nube.</p>
+          <p className="mt-1 text-sm leading-relaxed text-[#7C7C74]">Las últimas 3 de {name}. Restaurar las vuelve a poner sin tocar lo de {other}.</p>
           <div className="mt-2 space-y-2">
             {trash.map(item => (
               <button key={item.id} onClick={() => { if (restoreTrash(item.id)) location.reload() }}

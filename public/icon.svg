@@ -1,1 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#09090b"/><text x="256" y="330" font-size="240" text-anchor="middle">🏋️</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#09090b"/>
+  <rect x="214" y="232" width="84" height="48" fill="#B2EE37"/>
+  <polygon fill="#B2EE37" points="148,144 244.9,200 244.9,312 148,368 51.1,312 51.1,200"/>
+  <polygon fill="#B2EE37" points="364,144 460.9,200 460.9,312 364,368 267.1,312 267.1,200"/>
+</svg>

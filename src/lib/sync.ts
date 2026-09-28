@@ -89,10 +89,16 @@ async function fetchRemote(): Promise<SyncOp[]> {
     chosen: String(r.chosen_key),
   }))
   await take(supabase.from('prefs').select('*'), r => {
-    const value = (r.value ?? {}) as { secs?: number; machine?: string; mins?: number; items?: TrashEntry[] }
+    const value = (r.value ?? {}) as { secs?: number; machine?: string; mins?: number; items?: TrashEntry[]; at?: string; cm?: number; kg?: number }
     const at = iso(r.updated_at)
-    if (r.id === 'wipe') return { id: 'wipe', at, kind: 'wipe' }
-    if (r.id === 'trash') return { id: 'trash', at, kind: 'trash', items: value.items ?? [] }
+    const id = String(r.id)
+    const who = id.startsWith('wipe:') || id.startsWith('trash:') || id.startsWith('body:')
+      ? id.split(':')[1]
+      : ''
+    const profile = who === 'novia' ? 'novia' : who === 'yo' ? 'yo' : undefined
+    if (id.startsWith('wipe:') && profile) return { id, at, kind: 'wipe', profile }
+    if (id.startsWith('trash:') && profile) return { id, at, kind: 'trash', profile, items: value.items ?? [] }
+    if (id.startsWith('body:') && profile) return { id, at, kind: 'body', profile, cm: Number(value.cm), kg: Number(value.kg) }
     if (r.id === 'gap') return { id: 'gap', at, kind: 'gap', secs: Number(value.secs ?? 60) }
     if (r.id === 'cardio') {
       return { id: 'cardio', at, kind: 'cardio', machine: value.machine ?? 'Caminadora', mins: Number(value.mins ?? 15) }
@@ -144,20 +150,22 @@ async function pushOp(op: SyncOp) {
     ;({ error } = await supabase.from('prefs').upsert({
       id: 'cardio', value: { machine: op.machine, mins: op.mins }, updated_at: at,
     }, { onConflict: 'id' }))
-  } else if (op.kind === 'trash') {
+  } else if (op.kind === 'trash' && op.profile) {
     ;({ error } = await supabase.from('prefs').upsert({
-      id: 'trash', value: { items: op.items ?? [] }, updated_at: at,
+      id: `trash:${op.profile}`, value: { items: op.items ?? [] }, updated_at: at,
     }, { onConflict: 'id' }))
-  } else if (op.kind === 'wipe') {
+  } else if (op.kind === 'body' && op.profile) {
+    ;({ error } = await supabase.from('prefs').upsert({
+      id: `body:${op.profile}`, value: { cm: op.cm, kg: op.kg }, updated_at: at,
+    }, { onConflict: 'id' }))
+  } else if (op.kind === 'wipe' && op.profile) {
     const tables = ['weights', 'history', 'checks', 'sessions', 'weeks', 'swaps'] as const
     for (const table of tables) {
-      const deleted = await supabase.from(table).delete().neq('profile', '')
+      const deleted = await supabase.from(table).delete().eq('profile', op.profile)
       if (deleted.error) throw new Error(deleted.error.message)
     }
-    const prefs = await supabase.from('prefs').delete().in('id', ['gap', 'cardio'])
-    if (prefs.error) throw new Error(prefs.error.message)
     ;({ error } = await supabase.from('prefs').upsert({
-      id: 'wipe', value: { at }, updated_at: at,
+      id: `wipe:${op.profile}`, value: { at }, updated_at: at,
     }, { onConflict: 'id' }))
   }
   if (error) throw new Error(error.message)
@@ -186,28 +194,31 @@ export async function syncNow() {
   try {
     const remote = await fetchRemote()
     let changed = false
-    const pendingWipe = readOutbox().find(op => op.kind === 'wipe')
-    const remoteWipe = remote.find(op => op.kind === 'wipe')
-    let wipeAt = pendingWipe?.at ?? getWipedAt()
-    if (remoteWipe && remoteWipe.at > wipeAt) {
-      applyRemoteWipe(remoteWipe.at)
-      wipeAt = remoteWipe.at
-      changed = true
-    }
-    const remoteTrash = remote.find(op => op.kind === 'trash')
-    if (remoteTrash && remoteTrash.at > (readOutbox().find(op => op.kind === 'trash')?.at ?? metaAt('trash'))) {
-      mergeTrash(remoteTrash.items as TrashEntry[] | undefined, remoteTrash.at)
-      removeOutbox('trash')
-      changed = true
+    for (const remoteWipe of remote.filter(op => op.kind === 'wipe' && op.profile)) {
+      const pending = readOutbox().find(op => op.id === remoteWipe.id)
+      if (remoteWipe.at > (pending?.at ?? getWipedAt(remoteWipe.profile!))) {
+        applyRemoteWipe(remoteWipe.profile!, remoteWipe.at)
+        changed = true
+      }
     }
     const trashIds = (items: { id: string }[] | undefined) => (items ?? []).map(item => item.id).sort().join('|')
-    if (trashIds(readTrash()) !== trashIds(remoteTrash?.items as TrashEntry[] | undefined)) {
-      const items = readTrash()
-      if (items.length) enqueue({ id: 'trash', at: new Date().toISOString(), kind: 'trash', items })
+    for (const remoteTrash of remote.filter(op => op.kind === 'trash' && op.profile)) {
+      const pending = readOutbox().find(op => op.id === remoteTrash.id)
+      if (remoteTrash.at > (pending?.at ?? metaAt(remoteTrash.id))) {
+        mergeTrash(remoteTrash.profile!, remoteTrash.items as TrashEntry[] | undefined, remoteTrash.at)
+        removeOutbox(remoteTrash.id)
+        changed = true
+      }
+      const localItems = readTrash(remoteTrash.profile!)
+      if (trashIds(localItems) !== trashIds(remoteTrash.items as TrashEntry[] | undefined) && localItems.length) {
+        enqueue({ id: remoteTrash.id, at: new Date().toISOString(), kind: 'trash', profile: remoteTrash.profile, items: localItems })
+      }
     }
+    const owner = (op: { profile?: 'yo' | 'novia'; session?: { profile: 'yo' | 'novia' } }) => op.profile ?? op.session?.profile
     for (const row of remote) {
       if (row.kind === 'wipe' || row.kind === 'trash') continue
-      if (wipeAt && row.at <= wipeAt) continue
+      const who = owner(row)
+      if (who && row.kind !== 'body' && row.at <= getWipedAt(who)) continue
       const pending = readOutbox().find(op => op.id === row.id)
       const localAt = pending?.at ?? metaAt(row.id)
       if (row.at > localAt) {
@@ -218,20 +229,21 @@ export async function syncNow() {
     }
     const uploads = new Map<string, SyncOp>()
     for (const op of readOutbox()) {
-      if (op.kind !== 'wipe' && op.kind !== 'trash' && wipeAt && op.at <= wipeAt) continue
+      const who = owner(op)
+      if (op.kind !== 'wipe' && op.kind !== 'trash' && op.kind !== 'body' && who && op.at && op.at <= getWipedAt(who)) continue
       uploads.set(op.id, op)
     }
     const remoteAt = new Map(remote.map(row => [row.id, row.at]))
     const now = new Date().toISOString()
     for (const op of snapshotLocal()) {
       if (uploads.has(op.id) || remoteAt.has(op.id) || metaAt(op.id)) continue
-      if (wipeAt) continue
+      const who = owner(op)
+      if (who && getWipedAt(who)) continue
       uploads.set(op.id, { ...op, at: now })
     }
-    const wipeOp = uploads.get('wipe')
-    if (wipeOp) uploads.delete('wipe')
-    const ordered = [...uploads.values()]
-    if (wipeOp) ordered.push(wipeOp)
+    const wipes = [...uploads.values()].filter(op => op.kind === 'wipe')
+    for (const wipeOp of wipes) uploads.delete(wipeOp.id)
+    const ordered = [...uploads.values(), ...wipes]
     for (const op of ordered) {
       await pushOp(op)
       removeOutbox(op.id)

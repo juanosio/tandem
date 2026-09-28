@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { descansoMedio } from './types'
 import { getDayExercises, SEMANAS_DISPONIBLES } from './data/semanas'
 import { Dumbbell } from 'lucide-react'
-import { endSession, getRestGap, getWeek, isSetDone, PROFILE_LABEL, setWeek, startSession, todayStr, type Profile } from './lib/storage'
+import { endSession, getLastSession, getRestGap, getWeek, isSetDone, PROFILE_LABEL, setWeek, startSession, todayStr, type Profile } from './lib/storage'
 import { restoreSession, signOut } from './lib/auth'
 import { isCloudConfigured } from './lib/supabase'
 import { startSync } from './lib/sync'
@@ -12,11 +12,18 @@ import BottomNav, { type Tab } from './components/BottomNav'
 import ErrorBoundary from './components/ErrorBoundary'
 import FinishScreen from './components/FinishScreen'
 import HomeScreen from './components/HomeScreen'
+import RestDayScreen from './components/RestDayScreen'
+import RoutineGate from './components/RoutineGate'
 import WarmupScreen from './components/WarmupScreen'
 import PlayerScreen from './components/PlayerScreen'
 import RestScreen, { beep } from './components/RestScreen'
 import ProgressScreen from './components/ProgressScreen'
 import SettingsScreen from './components/SettingsScreen'
+
+function isRestToday(): boolean {
+  const d = new Date().getDay()
+  return d === 0 || d === 6
+}
 
 function diaDeHoy(): string {
   const d = new Date().getDay()
@@ -38,6 +45,7 @@ type Slot = {
   restSecs: number
   finished: boolean
   phase: 'warmup' | 'lift'
+  started: boolean
 }
 
 function freshSlot(): Slot {
@@ -51,6 +59,7 @@ function freshSlot(): Slot {
     restSecs: 0,
     finished: false,
     phase: 'lift',
+    started: false,
   }
 }
 
@@ -125,8 +134,12 @@ export default function App() {
     return () => clearTimeout(t)
   }, [profile, slot.resting, slot.restUntil, slot.tab])
 
+  const ensureSession = (dateStr: string, dia: string) => {
+    const open = getLastSession(profile, dateStr)
+    if (!open || open.endTs !== null) startSession(profile, dateStr, dia, list.length)
+  }
   const startAt = (i: number, dateStr: string, warmup = false) => {
-    startSession(profile, dateStr, slot.dia, list.length)
+    if (!warmup) ensureSession(dateStr, slot.dia)
     update(profile, cur => ({
       ...cur,
       activeDate: dateStr,
@@ -136,9 +149,14 @@ export default function App() {
       restUntil: null,
       tab: 'rutina',
       phase: warmup ? 'warmup' : 'lift',
+      started: true,
     }))
   }
-  const changeDia = (d: string) => update(profile, cur => ({ ...cur, dia: d, idx: 0, finished: false, resting: false, restUntil: null }))
+  const beginLifting = () => {
+    ensureSession(slot.activeDate, slot.dia)
+    update(profile, cur => ({ ...cur, phase: 'lift', started: true }))
+  }
+  const changeDia = (d: string) => update(profile, cur => ({ ...cur, dia: d, idx: 0, finished: false, resting: false, restUntil: null, started: false, phase: 'lift' }))
   const changeProfile = (p: Profile) => {
     setProfile(p)
     setSemana(getWeek(p))
@@ -146,7 +164,7 @@ export default function App() {
   const changeSemana = (s: number) => {
     setSemana(s)
     setWeek(profile, s)
-    update(profile, cur => ({ ...cur, idx: 0, finished: false, resting: false, restUntil: null }))
+    update(profile, cur => ({ ...cur, idx: 0, finished: false, resting: false, restUntil: null, started: false, phase: 'lift' }))
   }
 
   const completeExercise = () => {
@@ -206,6 +224,11 @@ export default function App() {
         )}
 
         {slot.tab === 'rutina' && (
+          slot.started ? null :
+          isRestToday() ? <RestDayScreen /> :
+          <RoutineGate onHome={() => update(profile, cur => ({ ...cur, tab: 'inicio' }))} />
+        )}
+        {slot.tab === 'rutina' && slot.started && (
           <>
             {slot.finished ? (
               <FinishScreen
@@ -213,11 +236,11 @@ export default function App() {
                 dia={slot.dia}
                 date={slot.activeDate}
                 list={list}
-                onHome={() => update(profile, cur => ({ ...cur, tab: 'inicio', finished: false, idx: 0, phase: 'lift' }))}
+                onHome={() => update(profile, cur => ({ ...cur, tab: 'inicio', finished: false, idx: 0, phase: 'lift', started: false }))}
                 onProgress={() => update(profile, cur => ({ ...cur, tab: 'progreso', phase: 'lift' }))}
               />
             ) : slot.phase === 'warmup' ? (
-              <WarmupScreen profile={profile} onDone={() => update(profile, cur => ({ ...cur, phase: 'lift' }))} />
+              <WarmupScreen profile={profile} onDone={beginLifting} />
             ) : slot.resting && slot.restUntil != null ? (
               <RestScreen
                 profile={profile}

@@ -1,5 +1,5 @@
 // Local primero. Si hay Supabase, cada cambio entra a la cola y se sube al tener internet.
-import { clearMeta, clearOutbox, enqueue, readOutbox, setMeta, type SyncOp } from './outbox'
+import { clearMetaMatching, clearOutbox, enqueue, readOutbox, replaceOutbox, setMeta, type SyncOp } from './outbox'
 
 export type Profile = 'yo' | 'novia'
 
@@ -18,8 +18,9 @@ const K_WEEK = 'gymapp.week.v2' // semana de entrenamiento actual
 const K_SESSIONS = 'gymapp.sessions.v2' // sesiones: cada rutina iniciada guarda su tiempo
 const K_SWAP = 'gymapp.swap.v1' // ejercicio principal elegido por perfil
 const K_CARDIO = 'gymapp.cardioPref.v1' // máquina y minutos del cardio extra de Juan
-const K_TRASH = 'gymapp.trash.v1' // últimas 3 rutinas borradas
-const K_WIPED = 'gymapp.wipedAt.v1'
+const K_TRASH = 'gymapp.trash.v1' // últimas 3 rutinas borradas, por persona
+const K_WIPED = 'gymapp.wipedAt.v1' // marca de borrado por persona
+const K_BODY = 'gymapp.body.v1'
 
 export interface HistEntry { profile: Profile; exerciseId: string; date: string; peso: number }
 
@@ -138,7 +139,88 @@ const LEGACY_KEYS = [
   'gymapp.workoutStart.v1', 'gymapp.workoutEnd.v1',
 ]
 
-export interface TrashEntry { id: string; at: string; data: Record<string, unknown> }
+export interface TrashEntry { id: string; at: string; profile: Profile; data: Record<string, unknown> }
+
+const DEFAULT_BODY: Record<Profile, { cm: number; kg: number }> = {
+  yo: { cm: 174, kg: 77 },
+  novia: { cm: 155, kg: 45 },
+}
+
+export function getBody(profile: Profile): { cm: number; kg: number } {
+  const saved = read<Partial<Record<Profile, { cm?: number; kg?: number }>>>(K_BODY, {})[profile]
+  const base = DEFAULT_BODY[profile]
+  const cm = Number(saved?.cm)
+  const kg = Number(saved?.kg)
+  return {
+    cm: Number.isFinite(cm) && cm >= 120 && cm <= 230 ? Math.round(cm) : base.cm,
+    kg: Number.isFinite(kg) && kg >= 30 && kg <= 250 ? Math.round(kg * 10) / 10 : base.kg,
+  }
+}
+
+export function setBody(profile: Profile, cm: number, kg: number) {
+  const all = read<Partial<Record<Profile, { cm: number; kg: number }>>>(K_BODY, {})
+  const next = { cm: Math.round(cm), kg: Math.round(kg * 10) / 10 }
+  all[profile] = next
+  write(K_BODY, all, true)
+  enqueue({ id: `body:${profile}`, at: stamp(), kind: 'body', profile, cm: next.cm, kg: next.kg })
+  notifyStorage()
+}
+
+function captureProfile(profile: Profile): Record<string, unknown> {
+  const weights = read<Record<string, Record<string, number>>>(K_WEIGHTS, {})[profile]
+  const done = read<Record<string, Record<string, boolean>>>(K_DONE, {})[profile]
+  const hist = read<HistEntry[]>(K_HIST, []).filter(h => h.profile === profile)
+  const sessions = read<Session[]>(K_SESSIONS, []).filter(s => s.profile === profile)
+  const swaps = read<Partial<Record<Profile, Record<string, string>>>>(K_SWAP, {})[profile]
+  return {
+    weights: weights ?? {},
+    done: done ?? {},
+    hist,
+    sessions,
+    week: getWeek(profile),
+    swap: swaps ?? {},
+  }
+}
+
+function profileHasData(data: Record<string, unknown>): boolean {
+  const weights = data.weights as Record<string, number> | undefined
+  const done = data.done as Record<string, boolean> | undefined
+  const hist = data.hist as unknown[] | undefined
+  const sessions = data.sessions as unknown[] | undefined
+  const swap = data.swap as Record<string, string> | undefined
+  return Boolean(
+    (weights && Object.keys(weights).length) ||
+    (done && Object.keys(done).length) ||
+    (hist && hist.length) ||
+    (sessions && sessions.length) ||
+    (swap && Object.keys(swap).length),
+  )
+}
+
+function stripProfile(profile: Profile) {
+  const weights = read<Record<string, Record<string, number>>>(K_WEIGHTS, {})
+  delete weights[profile]
+  write(K_WEIGHTS, weights, true)
+  const done = read<Record<string, Record<string, boolean>>>(K_DONE, {})
+  delete done[profile]
+  write(K_DONE, done, true)
+  write(K_HIST, read<HistEntry[]>(K_HIST, []).filter(h => h.profile !== profile), true)
+  write(K_SESSIONS, read<Session[]>(K_SESSIONS, []).filter(s => s.profile !== profile), true)
+  const swaps = read<Partial<Record<Profile, Record<string, string>>>>(K_SWAP, {})
+  delete swaps[profile]
+  write(K_SWAP, swaps, true)
+  const raw = readWeekStore()
+  const legacy = typeof raw === 'number' ? (raw || 1) : 1
+  const next: WeekStore = typeof raw === 'object' && raw
+    ? { yo: raw.yo ?? legacy, novia: raw.novia ?? legacy }
+    : { yo: legacy, novia: legacy }
+  next[profile] = 1
+  write(K_WEEK, next, true)
+}
+
+function belongsTo(op: SyncOp, profile: Profile): boolean {
+  return op.profile === profile || op.session?.profile === profile
+}
 
 function captureBackup(): Record<string, unknown> {
   const data: Record<string, unknown> = {}
@@ -157,59 +239,104 @@ function clearTrainingKeys() {
   } catch { /* noop */ }
 }
 
-export function getWipedAt(): string {
-  try { return localStorage.getItem(K_WIPED) ?? '' } catch { return '' }
+function readWipes(): Partial<Record<Profile, string>> {
+  const raw = read<Partial<Record<Profile, string>> | string>(K_WIPED, {})
+  return typeof raw === 'string' ? {} : (raw ?? {})
 }
 
-function setWipedAt(at: string) {
-  try { localStorage.setItem(K_WIPED, at) } catch { /* */ }
+export function getWipedAt(profile: Profile): string {
+  return readWipes()[profile] ?? ''
 }
 
-export function readTrash(): TrashEntry[] {
+function setWipedAt(profile: Profile, at: string) {
+  const all = readWipes()
+  all[profile] = at
+  write(K_WIPED, all, true)
+}
+
+export function readTrash(profile?: Profile): TrashEntry[] {
   const all = read<TrashEntry[]>(K_TRASH, [])
-  return Array.isArray(all) ? all.filter(item => item?.id && item.data).slice(0, 3) : []
+  const list = Array.isArray(all) ? all.filter(item => item?.id && item.data && item.profile) : []
+  const mine = profile ? list.filter(item => item.profile === profile) : list
+  return mine.sort((a, b) => b.at.localeCompare(a.at)).slice(0, profile ? 3 : 6)
 }
 
-export function mergeTrash(incoming: TrashEntry[] | undefined, at: string) {
+export function mergeTrash(profile: Profile, incoming: TrashEntry[] | undefined, at: string) {
+  const others = read<TrashEntry[]>(K_TRASH, []).filter(item => item?.profile && item.profile !== profile)
   const map = new Map<string, TrashEntry>()
-  for (const item of [...readTrash(), ...(incoming ?? [])]) {
-    if (item?.id && item.data) map.set(item.id, item)
+  for (const item of [...readTrash(profile), ...(incoming ?? [])]) {
+    if (item?.id && item.data) map.set(item.id, { ...item, profile })
   }
-  const next = [...map.values()].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 3)
-  write(K_TRASH, next, true)
-  setMeta('trash', at)
+  const mine = [...map.values()].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 3)
+  write(K_TRASH, [...others, ...mine], true)
+  setMeta(`trash:${profile}`, at)
 }
 
-export function applyRemoteWipe(at: string) {
-  if (!at || at <= getWipedAt()) return
-  const keep = readOutbox().filter(op => op.at > at && op.kind !== 'wipe')
-  clearTrainingKeys()
-  clearOutbox()
-  clearMeta()
-  setWipedAt(at)
-  for (const op of keep) enqueue(op)
+export function applyRemoteWipe(profile: Profile, at: string) {
+  if (!at || at <= getWipedAt(profile)) return
+  const sessions = read<Session[]>(K_SESSIONS, []).filter(s => s.profile === profile).map(s => s.id)
+  stripProfile(profile)
+  clearMetaMatching(id => id.includes(`:${profile}`) || sessions.some(sid => id === `session:${sid}`))
+  setWipedAt(profile, at)
+  replaceOutbox(readOutbox().filter(op => !belongsTo(op, profile) || (op.at > at && op.kind !== 'wipe')))
 }
 
-export function clearAll() {
-  const data = captureBackup()
+export function clearProfile(profile: Profile) {
+  const data = captureProfile(profile)
   const at = stamp()
-  const items = Object.keys(data).length
-    ? [{ id: at, at, data }, ...readTrash()].slice(0, 3)
-    : readTrash()
-  clearTrainingKeys()
-  clearOutbox()
-  clearMeta()
-  setWipedAt(at)
-  if (items.length) write(K_TRASH, items, true)
-  if (Object.keys(data).length) enqueue({ id: 'trash', at, kind: 'trash', items })
-  enqueue({ id: 'wipe', at, kind: 'wipe' })
+  const has = profileHasData(data)
+  const kept = readOutbox().filter(op => !belongsTo(op, profile))
+  const sessions = read<Session[]>(K_SESSIONS, []).filter(s => s.profile === profile).map(s => s.id)
+  stripProfile(profile)
+  clearMetaMatching(id => id.includes(`:${profile}`) || sessions.some(sid => id === `session:${sid}`))
+  setWipedAt(profile, at)
+  replaceOutbox(kept)
+  const others = read<TrashEntry[]>(K_TRASH, []).filter(item => item?.profile && item.profile !== profile)
+  const mine = has ? [{ id: at, at, profile, data }, ...readTrash(profile)].slice(0, 3) : readTrash(profile)
+  if (mine.length || others.length) write(K_TRASH, [...others, ...mine], true)
+  if (has) enqueue({ id: `trash:${profile}`, at, kind: 'trash', profile, items: mine })
+  enqueue({ id: `wipe:${profile}`, at, kind: 'wipe', profile })
   notifyStorage()
+}
+
+function restoreSlice(profile: Profile, data: Record<string, unknown>) {
+  const weights = read<Record<string, Record<string, number>>>(K_WEIGHTS, {})
+  weights[profile] = (data.weights as Record<string, number>) ?? {}
+  write(K_WEIGHTS, weights, true)
+  const done = read<Record<string, Record<string, boolean>>>(K_DONE, {})
+  done[profile] = (data.done as Record<string, boolean>) ?? {}
+  write(K_DONE, done, true)
+  const hist = read<HistEntry[]>(K_HIST, []).filter(h => h.profile !== profile)
+  const backHist = Array.isArray(data.hist) ? data.hist as HistEntry[] : []
+  write(K_HIST, [...hist, ...backHist].slice(-2000), true)
+  const sessions = read<Session[]>(K_SESSIONS, []).filter(s => s.profile !== profile)
+  const backSessions = Array.isArray(data.sessions) ? data.sessions as Session[] : []
+  write(K_SESSIONS, [...sessions, ...backSessions].slice(-500), true)
+  const swaps = read<Partial<Record<Profile, Record<string, string>>>>(K_SWAP, {})
+  swaps[profile] = (data.swap as Record<string, string>) ?? {}
+  write(K_SWAP, swaps, true)
+  if (typeof data.week === 'number' && data.week >= 1) {
+    const raw = readWeekStore()
+    const legacy = typeof raw === 'number' ? (raw || 1) : 1
+    const next: WeekStore = typeof raw === 'object' && raw
+      ? { yo: raw.yo ?? legacy, novia: raw.novia ?? legacy }
+      : { yo: legacy, novia: legacy }
+    next[profile] = data.week
+    write(K_WEEK, next, true)
+  }
 }
 
 export function restoreTrash(id: string): boolean {
   const item = readTrash().find(entry => entry.id === id)
-  if (!item) return false
-  return importBackup(JSON.stringify({ app: 'tandem', data: item.data }))
+  if (!item?.profile) return false
+  restoreSlice(item.profile, item.data)
+  const at = stamp()
+  for (const op of snapshotLocal()) {
+    if (!belongsTo(op, item.profile)) continue
+    enqueue({ ...op, at })
+  }
+  notifyStorage()
+  return true
 }
 
 export function exportBackup(): string {
@@ -268,7 +395,7 @@ export function setCardioPref(pref: CardioPref) {
 }
 
 // ---- Sesiones ----
-// Cada vez que das EMPEZAR se crea una sesión (el contador arranca de 0).
+// La sesión (y el contador) arranca al pasar a las pesas, no al mirar la app.
 // Al TERMINAR se cierra con su duración. Eso alimenta: promedio por día,
 // estimado en HOY TOCA, puntitos verdes, calendario y meta semanal.
 // Los pesos e historial NO se borran: los checks son por fecha pero tus kg se recuerdan.
@@ -446,6 +573,10 @@ export function ingestRemote(op: SyncOp) {
     write(K_GAP, op.secs, true)
   } else if (op.kind === 'cardio' && op.machine && typeof op.mins === 'number') {
     write(K_CARDIO, { machine: op.machine, mins: op.mins }, true)
+  } else if (op.kind === 'body' && isProfile(op.profile) && typeof op.cm === 'number' && typeof op.kg === 'number') {
+    const all = read<Partial<Record<Profile, { cm: number; kg: number }>>>(K_BODY, {})
+    all[op.profile] = { cm: op.cm, kg: op.kg }
+    write(K_BODY, all, true)
   } else {
     return
   }

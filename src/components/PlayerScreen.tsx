@@ -2,43 +2,29 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, ArrowLeftRight, Check, ChevronLeft, ChevronRight, ChevronUp, Flame, Hourglass, Info, Play, Timer, TrendingDown, TrendingUp } from 'lucide-react'
 import type { Exercise } from '../types'
 import { descansoMedio, TIPO_PESO_LABEL } from '../types'
+import { firstLoadGuide } from '../lib/loadGuide'
 import { getHistory, getLastSession, getPeso, isSetDone, setPeso, toggleSetDone, type HistEntry, type Profile } from '../lib/storage'
 import { useStorageRev } from '../lib/useStorage'
 import ExerciseMedia from './ExerciseMedia'
 import { EXERCISE_MEDIA } from '../data/media'
 import { beep } from './RestScreen'
 
-function pesoTip(semana: number, last: HistEntry | null, reps: string): { title: string; body: string } {
+function pesoTip(profile: Profile, ex: Exercise, semana: number, last: HistEntry | null, reps: string): { title: string; body: string } {
+  if (!last) return firstLoadGuide(profile, ex)
   const nums = reps.match(/\d+/g)?.map(Number) ?? []
   const top = nums.length ? Math.max(...nums) : null
-  if (!last) {
-    if (semana === 1 || semana === 6) {
-      return {
-        title: 'Semana de adaptación',
-        body: 'Elige un peso que controles y te deje 3 o 4 repeticiones de sobra. Esta semana es para clavar la técnica. No subas peso.',
-      }
-    }
+  if (semana === 1 || semana === 6) {
     return {
-      title: 'Primera vez aquí',
-      body: `Elige un peso dentro de ${reps} y deja 2 o 3 reps en reserva. La próxima sesión te recordaré este peso y te diré si toca repetirlo o subir.`,
+      title: 'La última vez',
+      body: `Levantaste ${last.peso} kg. Prueba con eso. Esta semana no subas.`,
     }
   }
-  if (semana === 1) {
-    return {
-      title: 'Semana de adaptación',
-      body: `La última vez usaste ${last.peso} kg. Repite ese peso y deja 3 o 4 reps en el tanque. Aún no toca subir.`,
-    }
-  }
-  if (semana === 6) {
-    return {
-      title: 'Semana de adaptación',
-      body: `La última vez usaste ${last.peso} kg. El estímulo cambia: vuelve a un peso cómodo, con reps de sobra. Esta semana no se busca récord.`,
-    }
-  }
-  const tope = top ? `${top} reps` : `el tope de ${reps}`
+  const sube = top
+    ? ` Si llegas a ${top} reps y todavía sobra, súbele un poco.`
+    : ' Si te sobra al final, súbele un poco.'
   return {
-    title: 'Doble progresión',
-    body: `La última vez usaste ${last.peso} kg. Sigue con ese peso hasta completar ${tope} con buena forma. Solo si ya llegaste a ese tope y se sintió controlado, súbele un poco: las reps bajarán y vuelves a construir. Si no puedes subir, baja más lento. La técnica va antes que el disco.`,
+    title: 'La última vez',
+    body: `Levantaste ${last.peso} kg. Prueba con eso y mira cómo se siente.${sube}`,
   }
 }
 
@@ -46,8 +32,7 @@ const round05 = (n: number) => Math.round(n * 2) / 2
 const fmtClock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 const demoLink = (q: string) => `https://www.youtube.com/results?search_query=${encodeURIComponent(q + ' ejercicio técnica')}`
 
-// Chip con el tiempo de la sesión actual: arranca de 0 en cada EMPEZAR
-// y se congela al TERMINAR.
+// Chip con el tiempo de la sesión: arranca al pasar a las pesas y se congela al terminar.
 function TimerChip({ profile, date }: { profile: Profile; date: string }) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -143,7 +128,7 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
   const hist = getHistory(profile, wKey)
   const last = [...hist].reverse().find(h => h.date !== date) ?? null
   const prev = last?.peso ?? null
-  const tip = pesoTip(semana, last, ex.workReps)
+  const tip = pesoTip(profile, ex, semana, last, ex.workReps)
   const workDone = Array.from({ length: ex.workSets }, (_, i) => isSetDone(profile, `${date}:${ex.id}:work${i}`))
   const allWorkDone = workDone.every(Boolean)
 

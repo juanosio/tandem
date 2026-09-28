@@ -17,8 +17,10 @@ export interface SyncSession {
 export interface SyncOp {
   id: string
   at: string
-  kind: 'weight' | 'hist' | 'check' | 'session' | 'week' | 'swap' | 'gap' | 'cardio' | 'wipe' | 'trash'
-  items?: { id: string; at: string; data: Record<string, unknown> }[]
+  kind: 'weight' | 'hist' | 'check' | 'session' | 'week' | 'swap' | 'gap' | 'cardio' | 'wipe' | 'trash' | 'body'
+  items?: { id: string; at: string; profile?: Profile; data: Record<string, unknown> }[]
+  cm?: number
+  kg?: number
   profile?: Profile
   exerciseId?: string
   peso?: number
@@ -65,6 +67,11 @@ export function clearOutbox() {
   try { localStorage.removeItem(K_OUT) } catch { /* */ }
 }
 
+export function replaceOutbox(ops: SyncOp[]) {
+  saveOps(ops)
+  dirty.forEach(fn => fn())
+}
+
 function readMeta(): Record<string, string> {
   try {
     const raw = localStorage.getItem(K_META)
@@ -84,6 +91,12 @@ export function setMeta(id: string, at: string) {
 
 export function clearMeta() {
   try { localStorage.removeItem(K_META) } catch { /* */ }
+}
+
+export function clearMetaMatching(match: (id: string) => boolean) {
+  const all = readMeta()
+  for (const id of Object.keys(all)) if (match(id)) delete all[id]
+  try { localStorage.setItem(K_META, JSON.stringify(all)) } catch { /* */ }
 }
 
 export function onDirty(fn: DirtyListener) {

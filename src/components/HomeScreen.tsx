@@ -14,6 +14,21 @@ interface Props {
   semanas: number[]
 }
 
+const WEEK_LINES = [
+  'Que hoy marque el inicio de tu increíble transformación',
+  'Ya empezaste. Esta semana se trata de repetir y afinar.',
+  'El cuerpo ya conoce el camino. Hoy súmale un poco.',
+  'Cuatro semanas. Lo difícil ya se está volviendo costumbre.',
+  'Vas por la mitad del arranque. La constancia se nota.',
+  'Semana de ajuste. Entrena con cabeza, sin apurar.',
+  'Ya no estás empezando. Estás construyendo.',
+  'Ocho semanas. Confía en lo que ya puedes levantar.',
+  'Queda el tramo final del bloque. Cada sesión cuenta.',
+  'Diez semanas. La técnica que repetiste ya es tuya.',
+  'Casi al cierre. No aflojes justo ahora.',
+  'Última semana del plan. Termínala tan bien como empezaste.',
+]
+
 const WD_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const DIA_BY_WD = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', '', ''] // sáb/dom = descanso
 
@@ -149,7 +164,7 @@ export default function HomeScreen({ profile, dia, setDia, onStart, semana, setS
       <div className="mb-3 rounded-3xl bg-[#B2EE37]/10 p-4">
         <p className="flex items-start gap-2 text-base font-bold leading-snug">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#B2EE37]" strokeWidth={2.25} />
-          Que hoy marque el inicio de tu increíble transformación
+          {WEEK_LINES[Math.min(WEEK_LINES.length, Math.max(1, semana)) - 1]}
         </p>
         <p className="mb-2 mt-3 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Semana del plan</p>
         <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
@@ -187,14 +202,14 @@ export default function HomeScreen({ profile, dia, setDia, onStart, semana, setS
             {list.map((e, i) => {
               const done = Array.from({ length: e.workSets }, (_, k) => isSetDone(profile, `${dayKey}:${e.id}:work${k}`)).every(Boolean)
               return (
-                <button key={e.id} onClick={() => onStart(i, dayKey, false)} className="flex min-h-11 w-full items-center gap-2.5 text-left">
+                <div key={e.id} className="flex min-h-11 w-full items-center gap-2.5 text-left">
                   <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${done ? 'bg-[#55F670] text-black' : 'bg-[#23262c] text-[#7C7C74]'}`}>
                     {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <span className="font-display">{i + 1}</span>}
                   </span>
                   <p className={`truncate text-base font-semibold ${done ? 'text-[#55F670] line-through' : 'text-[#FCFCFC]'}`}>
                     {e.nombre} <span className="font-bold text-[#7C7C74]">· {e.workSets}x{e.workReps}</span>
                   </p>
-                </button>
+                </div>
               )
             })}
           </div>

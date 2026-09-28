@@ -73,8 +73,13 @@ h1, h2, h3, .font-display {
   100% { transform: rotate(360deg); }
 }
 .hourglass-flip { display: inline-block; animation: hourglass-flip 1.8s ease-in-out infinite; }
+@keyframes rest-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.rest-bob { animation: rest-bob 2.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .hourglass-flip { animation: none; }
+  .hourglass-flip, .rest-bob { animation: none; }
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
