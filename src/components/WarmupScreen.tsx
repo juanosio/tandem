@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
-import { warmupFor, type WarmItem } from '../data/warmup'
+import { WARMUP_VIDEO, warmupFor, type WarmItem } from '../data/warmup'
 import type { Profile } from '../lib/storage'
 
 function fmt(s: number) {
@@ -13,11 +13,14 @@ function ItemRow({ item, on, toggle }: { item: WarmItem; on: boolean; toggle: ()
       <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 ${on ? 'border-[#B2EE37] bg-[#B2EE37] text-black' : 'border-[#3a3d43] text-transparent'}`}>
         <Check className="h-4 w-4" strokeWidth={3} />
       </span>
-      <span className="min-w-0">
+      <span className="block min-w-0 flex-1">
         <span className={`block text-base font-semibold ${on ? 'text-[#55F670]' : ''}`}>{item.nombre}</span>
         <span className="block text-sm text-[#7C7C74]">
           {item.reps}{item.nota ? ` · ${item.nota}` : ''}
         </span>
+        {item.gif && (
+          <img src={item.gif} alt="" className="mt-2 max-h-52 w-full rounded-2xl bg-[#0e1013] object-contain" />
+        )}
       </span>
     </button>
   )
@@ -88,7 +91,10 @@ export default function WarmupScreen({ profile, onDone }: { profile: Profile; on
         ))}
       </div>
 
-      <p className="mt-3 text-center text-xs leading-relaxed text-[#7C7C74]">Los videos de estos movimientos entran cuando los tengas. Hoy basta con hacerlos.</p>
+      <a href={WARMUP_VIDEO} target="_blank" rel="noreferrer" className="mt-4 block rounded-3xl bg-[#17191d]/90 p-4 text-center">
+        <span className="block text-base font-bold text-sky-300 underline">Ver el video del calentamiento</span>
+        {plan.videoNota && <span className="mt-2 block text-sm leading-relaxed text-[#FCFCFC]">{plan.videoNota}</span>}
+      </a>
 
       <button onClick={onDone} className="mt-4 min-h-14 w-full rounded-2xl bg-[#B2EE37] py-4 text-lg font-bold uppercase text-black">
         A las pesas
