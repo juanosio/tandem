@@ -51,6 +51,7 @@ export default function RestScreen({ profile, date, until, totalSecs, hint, next
   const ses = getLastSession(profile, date)
   const elapsed = ses ? Math.max(0, Math.floor(((ses.endTs ?? now) - ses.startTs) / 1000)) : 0
   const leftEx = remaining.total - remaining.done
+  const simple = profile === 'novia'
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
@@ -63,8 +64,8 @@ export default function RestScreen({ profile, date, until, totalSecs, hint, next
       {/* Estado de la sesión */}
       <div className="mb-1 grid w-full grid-cols-2 gap-2">
         <div className="rounded-2xl bg-[#17191d] p-3">
-          <p className="flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">
-            <Timer className="h-3.5 w-3.5" strokeWidth={2.25} /> Entrenando
+          <p className={`flex items-center justify-center gap-1 font-bold text-[#7C7C74] ${simple ? 'text-[11px] leading-tight' : 'text-xs uppercase tracking-wider'}`}>
+            <Timer className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} /> {simple ? 'Tiempo total entrenando' : 'Entrenando'}
           </p>
           <p className="font-display text-xl font-semibold tabular-nums">{fmt(elapsed)}</p>
         </div>
@@ -79,10 +80,12 @@ export default function RestScreen({ profile, date, until, totalSecs, hint, next
             Siguiente: <b className="text-[#FCFCFC]">{nextName}</b>
           </p>
           {nextEx && <div className="mt-3"><ExerciseMedia ex={nextEx} big /></div>}
-          <p className="mt-2 text-sm text-[#7C7C74]">
-            {extraSecs > 0 ? `${fmt(extraSecs)} más que entre series. ` : 'El mismo descanso que entre series. '}
-            Recupera y prepárate.
-          </p>
+          {!simple && (
+            <p className="mt-2 text-sm text-[#7C7C74]">
+              {extraSecs > 0 ? `${fmt(extraSecs)} más que entre series. ` : 'El mismo descanso que entre series. '}
+              Recupera y prepárate.
+            </p>
+          )}
         </div>
       ) : (
         <p className="text-base text-[#7C7C74]">Último ejercicio completado. ¡Buen trabajo!</p>

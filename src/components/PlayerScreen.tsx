@@ -113,6 +113,7 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
   const [setRestUntil, setSetRestUntil] = useState<number | null>(null)
   const [, force] = useState(0)
   const setRestSecs = descansoMedio(ex.descanso, 90)
+  const simple = profile === 'novia'
 
   useEffect(() => { setSetRestUntil(null) }, [ex.id])
   useEffect(() => {
@@ -165,10 +166,12 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
       {/* Título estilo referencia */}
       <h2 className="text-center text-2xl font-black uppercase tracking-wide">{ex.nombre}</h2>
       {ex.nombreEn && <p className="text-center text-sm font-bold uppercase tracking-wider text-[#7C7C74]">{ex.nombreEn}</p>}
-      <p className="mb-2 text-center text-base font-semibold text-[#B2EE37]">
-        {ex.workSets} sets x {ex.workReps} reps
-      </p>
-      {(ex.descanso || ex.rpe) && (
+      {!simple && (
+        <p className="mb-2 text-center text-base font-semibold text-[#B2EE37]">
+          {ex.workSets} sets x {ex.workReps} reps
+        </p>
+      )}
+      {!simple && (ex.descanso || ex.rpe) && (
         <div className="mb-1 flex items-center justify-center gap-2">
           {ex.descanso && (
             <span className="inline-flex items-center gap-1 rounded-full bg-[#1f2227] px-3 py-1.5 text-sm font-bold text-[#FCFCFC]">
@@ -220,12 +223,23 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
               <p className="text-base leading-relaxed text-[#FCFCFC]">{ex.tecnica}</p>
             </div>
           )}
-          <ExerciseMedia ex={ex} big />
-          <div className="mt-2 text-center">
-            <a href={ex.video ?? ex.demoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-sky-300 underline">
-              <Play className="h-3.5 w-3.5" fill="currentColor" /> Ver cómo se hace
-            </a>
-          </div>
+          <ExerciseMedia ex={ex} big quiet={simple} />
+          {simple ? (
+            <div className="mt-3">
+              <p className="mb-2 text-center text-sm font-bold leading-snug text-amber-300">
+                El dibujo puede no mostrar la técnica real. Mira el video.
+              </p>
+              <a href={ex.video ?? ex.demoUrl} target="_blank" rel="noreferrer" className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-sky-400/20 px-4 py-4 text-lg font-black text-sky-200">
+                <Play className="h-6 w-6" fill="currentColor" /> Ver cómo se hace
+              </a>
+            </div>
+          ) : (
+            <div className="mt-2 text-center">
+              <a href={ex.video ?? ex.demoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-sky-300 underline">
+                <Play className="h-3.5 w-3.5" fill="currentColor" /> Ver cómo se hace
+              </a>
+            </div>
+          )}
         </>
       )}
 
@@ -250,10 +264,12 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
         </div>
         <button onClick={() => onPeso(String(round05((peso === '' ? 0 : Number(peso)) + 2.5)))} className="h-14 w-14 rounded-2xl bg-[#1f2227] text-3xl font-black text-[#FCFCFC]">+</button>
       </div>
-      <div className="mt-3 rounded-2xl bg-[#17191d] p-3 text-left">
-        <p className="text-xs font-bold uppercase tracking-wider text-[#B2EE37]">{tip.title}</p>
-        <p className="mt-1 text-sm leading-relaxed text-[#FCFCFC]">{tip.body}</p>
-      </div>
+      {!simple && (
+        <div className="mt-3 rounded-2xl bg-[#17191d] p-3 text-left">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#B2EE37]">{tip.title}</p>
+          <p className="mt-1 text-sm leading-relaxed text-[#FCFCFC]">{tip.body}</p>
+        </div>
+      )}
       {prev !== null && peso !== '' && Number(peso) !== prev && (
         <p className="mt-1 flex items-center justify-center gap-1 text-center text-xs text-[#7C7C74]">
           Última vez: <span className="font-display text-sm text-[#FCFCFC]">{prev} kg</span>
@@ -264,7 +280,7 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
       )}
 
       {/* Calentamiento */}
-      <h3 className="mb-1.5 mt-4 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Calentamiento ({ex.calentSets})</h3>
+      <h3 className="mb-1.5 mt-4 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">{simple ? 'Series' : `Calentamiento (${ex.calentSets})`}</h3>
       <div className="space-y-1.5">
         {calent.map((c, i) => {
           const k = `cal${i}`
@@ -275,14 +291,19 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
               <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 ${d ? 'border-[#55F670] bg-[#55F670] text-black' : 'border-[#3a3d43] text-transparent'}`}>
                 <Check className="h-4 w-4" strokeWidth={3} />
               </span>
-              <span>S{i + 1} · {c.reps} reps {c.kg !== null ? <b className="text-[#FCFCFC]">@ {c.kg}kg</b> : <span className="text-[#7C7C74]">({c.pct}% — mete tu peso)</span>}</span>
+              <span>
+                {simple ? `Serie ${i + 1}` : `S${i + 1}`} · {c.reps} {simple ? 'repeticiones' : 'reps'}{' '}
+                {c.kg !== null
+                  ? <b className="text-[#FCFCFC]">@ {c.kg}kg</b>
+                  : <span className="text-[#7C7C74]">{simple ? '· introduce los kg de trabajo de hoy' : `(${c.pct}% — mete tu peso)`}</span>}
+              </span>
             </button>
           )
         })}
       </div>
 
       {/* Series reales */}
-      <h3 className="mb-1.5 mt-4 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">Series de trabajo</h3>
+      <h3 className="mb-1.5 mt-4 text-xs font-bold uppercase tracking-wider text-[#7C7C74]">{simple ? 'Series' : 'Series de trabajo'}</h3>
       <div className="space-y-2">
         {Array.from({ length: ex.workSets }, (_, i) => {
           const k = `work${i}`
@@ -296,9 +317,9 @@ export default function PlayerScreen({ ex, profile, date, index, total, isLast, 
               <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border-2 font-bold ${d ? 'border-black bg-black text-[#55F670]' : 'border-black/20 text-transparent'}`}>
                 <Check className="h-4 w-4" strokeWidth={3} />
               </span>
-              <span className="flex-1 text-base font-black">SET {i + 1} · {ex.workReps} reps {peso !== '' && peso > 0 ? `@ ${peso}kg` : ''}</span>
+              <span className="flex-1 text-base font-black">{simple ? `Serie ${i + 1}` : `SET ${i + 1}`} · {ex.workReps} {simple ? 'repeticiones' : 'reps'} {peso !== '' && peso > 0 ? `@ ${peso}kg` : ''}</span>
               {toFailure && <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white"><Flame className="h-3 w-3" /> AL FALLO</span>}
-              {setRpe && <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black ${d ? 'bg-black text-[#55F670]' : 'bg-black/10 text-black'}`}>RPE {setRpe}</span>}
+              {!simple && setRpe && <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black ${d ? 'bg-black text-[#55F670]' : 'bg-black/10 text-black'}`}>RPE {setRpe}</span>}
             </button>
           )
         })}

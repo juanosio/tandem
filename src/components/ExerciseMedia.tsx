@@ -7,7 +7,7 @@ import Placeholder from './Placeholder'
 // video/mp4 propio > foto propia > GIF de la librería > muñeco gris.
 // - Ejercicio que se repite en otra rutina/semana: ponle el mismo mediaKey y listo.
 // - Caso puntual distinto: usa ex.mediaMp4 / ex.mediaImage directo en el ejercicio.
-export default function ExerciseMedia({ ex, big = false }: { ex: Exercise; big?: boolean }) {
+export default function ExerciseMedia({ ex, big = false, quiet = false }: { ex: Exercise; big?: boolean; quiet?: boolean }) {
   const lib = (ex.mediaKey && EXERCISE_MEDIA[ex.mediaKey]) || {}
   const mp4 = ex.mediaMp4 || lib.video
   const img = ex.mediaImage || lib.photo || lib.gif
@@ -28,7 +28,7 @@ export default function ExerciseMedia({ ex, big = false }: { ex: Exercise; big?:
           loading="lazy"
           className={big ? 'mx-auto h-56 rounded-2xl object-contain' : 'mx-auto h-32 rounded-2xl object-contain'}
         />
-        {lib.approx && (
+        {lib.approx && !quiet && (
           <p className="mx-auto mt-2 w-fit rounded-full bg-amber-400/15 px-3 py-1 text-[11px] font-black text-amber-300">
             <AlertTriangle className="mr-1 inline h-3 w-3" /> GIF referencial — mira el video
           </p>

@@ -16,6 +16,53 @@ const GOBLET_ALT: Alt[] = [
 ]
 const TUE_PRESS_TECNICA = 'Espalda bien apoyada en el respaldo. Baja controlado y sin que la rodilla se meta hacia dentro. Si cambias a la Smith, adelanta los pies unos 10-15 cm.'
 
+// En su gym no están la barra, las dominadas ni varias máquinas.
+// Esas pasan a alternativa y entra la variante que sí puede hacer.
+const PROMOTE: Record<string, { to: string; tipo: Exercise['tipoPeso']; tecnica?: string }> = {
+  'incline-barbell-press': { to: 'incline-db-press', tipo: 'redondo' },
+  'cable-crossover-ladder': {
+    to: 'bottom-half-db-flye',
+    tipo: 'redondo',
+    tecnica: 'Todas las repeticiones en la mitad inferior. Abajo, siente el estiramiento del pecho. Sube solo hasta la mitad.',
+  },
+  'wide-grip-pullup': {
+    to: 'wide-grip-lat-pulldown',
+    tipo: 'cuadrado',
+    tecnica: 'Agarre ancho. Baja la barra hacia el pecho y sube controlado, sintiendo la espalda.',
+  },
+  'deficit-pendlay-row': {
+    to: 'smith-machine-row',
+    tipo: 'redondo',
+    tecnica: 'Aprieta los omóplatos juntos y mantén los codos cerca, a unos 45°.',
+  },
+  'high-cable-lateral-raise': { to: 'lean-in-db-lateral-raise', tipo: 'redondo' },
+  'bayesian-cable-curl': { to: 'incline-db-stretch-curl', tipo: 'redondo' },
+  'chest-supported-machine-row': { to: 'chest-supported-incline-db-row', tipo: 'redondo' },
+  'machine-shrug': { to: 'db-shrug', tipo: 'redondo' },
+  'machine-preacher-curl': { to: 'db-preacher-curl', tipo: 'redondo' },
+}
+
+function promote(ex: Exercise): Exercise {
+  const rule = ex.mediaKey ? PROMOTE[ex.mediaKey] : undefined
+  if (!rule) return ex
+  const alt = (ex.alts ?? []).find(a => a.mediaKey === rule.to)
+  if (!alt) return ex
+  const previous: Alt = { es: ex.nombre, en: ex.nombreEn, video: ex.video, mediaKey: ex.mediaKey }
+  const alts = [previous, ...(ex.alts ?? []).filter(a => a.mediaKey !== rule.to)]
+  return {
+    ...ex,
+    nombre: alt.es,
+    nombreEn: alt.en,
+    video: alt.video ?? ex.video,
+    demoUrl: alt.video ?? ex.demoUrl,
+    mediaKey: alt.mediaKey,
+    tipoPeso: rule.tipo,
+    tecnica: rule.tecnica ?? ex.tecnica,
+    alts,
+    alternativas: alts.map(a => a.es).join(' o '),
+  }
+}
+
 function yo(semana: number, dia: string): Exercise[] {
   return getYoDayExercises(semana, dia)
 }
@@ -41,9 +88,9 @@ function customize(ex: Exercise): Exercise {
     return { ...next, alts: GOBLET_ALT, alternativas: 'Sentadilla goblet' }
   }
   if (next.mediaKey === 'machine-abduction' && !next.tecnica.includes('estabilizar la rodilla')) {
-    return { ...next, tecnica: `${next.tecnica} Fundamental para estabilizar la rodilla.`.trim() }
+    return promote({ ...next, tecnica: `${next.tecnica} Fundamental para estabilizar la rodilla.`.trim() })
   }
-  return next
+  return promote(next)
 }
 
 function withIntensity(base: Exercise, src: Exercise): Exercise {

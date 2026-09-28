@@ -63,14 +63,13 @@ const MARIAN: WarmPlan = {
     {
       id: 'cardio',
       titulo: 'Cardio ligero',
-      detalle: '5 a 10 minutos en bicicleta estática. Es un movimiento cerrado y cuida la rótula.',
-      aviso: 'Mejor sin escaladora ni caminadora rápida: el impacto y apoyar todo el peso en un solo pie cargan la rodilla.',
+      detalle: '5 a 10 minutos en bicicleta estática.',
       maquinas: ['Bicicleta'],
     },
     {
       id: 'torso',
       titulo: 'Movilidad del torso',
-      detalle: 'Igual que siempre, sin involucrar la rodilla.',
+      detalle: '10 repeticiones por lado, sin peso.',
       items: [
         { id: 'swings', nombre: 'Balanceo de brazos', en: 'Arm Swings', reps: '10 por lado', gif: '/warmup/arm-swings.gif' },
         { id: 'circles', nombre: 'Círculos con los brazos', en: 'Arm Circles', reps: '10 por lado', gif: '/warmup/arm-circles.gif' },
